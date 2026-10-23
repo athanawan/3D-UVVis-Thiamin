@@ -1,7 +1,7 @@
 """Penetapan Kadar Thiamin dalam Sampel Tablet Vitamin B1 secara Spektrofotometri UV
 Simulasi 3D interaktif Spektrofotometer UV-Vis Double-Beam (Streamlit + Three.js).
 
-Politeknik AKA Bogor · Program Studi D3 Analisis Kimia · Atha Mahardika Nawan
+Politeknik AKA Bogor · Program Studi D3 Analisis Kimia · 
 """
 from pathlib import Path
 
