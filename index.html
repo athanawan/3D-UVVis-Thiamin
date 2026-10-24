@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lab Virtual UV-Vis — Penetapan Thiamin</title>
+<style>
+:root{--bg:#e9e6db;--pan:rgba(255,255,251,.96);--line:#d2cdbb;--acc:#c2410c;--acc2:#2f5d50;--txt:#1f2926;--mut:#6a736e;--ink:#17201e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font:13px/1.5 'Segoe UI',system-ui,sans-serif;overflow:hidden}
+#app{position:relative;height:100%;display:flex;flex-direction:column}
+header{flex:none;height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--ink);color:#f4efe0;position:relative;z-index:7}
+header b{color:#fdba74;letter-spacing:.8px;white-space:nowrap}
+header .sub{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#aab6b0}
+#prog{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,#fb923c,#fde047);transition:width .6s}
+button{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--acc);color:var(--acc)}
+button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.hb{flex:none;width:36px;height:32px;padding:0;font-size:17px;line-height:1;background:transparent;color:#f4efe0;border-color:#46544f}
+.hb:hover{background:#26332f;color:#fff;border-color:#fb923c}
+#stage{position:relative;flex:1;min-height:0;overflow:hidden}
+#view{position:absolute;inset:0;background:#b8c4c0}
+#view canvas{display:block;touch-action:none}
+aside{position:absolute;top:12px;bottom:84px;z-index:4;background:var(--pan);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(20,30,28,.22);overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+#left{left:12px;width:224px}#right{right:12px;width:330px}
+#stage.hl #left,#stage.hr #right{display:none}
+h3{margin:14px 0 6px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut)}h3:first-child{margin-top:0}
+.mode,.comp{display:block;width:100%;text-align:left;margin-bottom:4px}.comp{font-size:12px;padding:4px 8px}
+#pipe{display:flex;flex-direction:column;gap:4px}
+.chip{position:relative;padding:5px 10px 5px 30px;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--mut);background:#fff;transition:.3s}
+.chip:before{content:"";position:absolute;left:10px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;border:2px solid #c9c4b0}
+.chip.done{color:var(--acc2);border-color:#a9c4b9;background:#eef5f1}.chip.done:before{background:var(--acc2);border-color:var(--acc2)}
+.chip.act{background:#fff1e6;border-color:var(--acc);color:var(--acc);font-weight:600}.chip.act:before{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 4px #fed7aa}
+.arr{display:none}
+.lbl{position:absolute;transform:translate(8px,-50%);font-size:11px;padding:2px 7px;background:#fffdf6;color:var(--ink);border:1px solid var(--acc);border-radius:10px;white-space:nowrap;pointer-events:auto;cursor:pointer}
+.lbl:before{content:"";position:absolute;left:-9px;top:50%;width:7px;height:7px;margin-top:-3px;border-radius:50%;background:var(--acc)}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#tip{position:absolute;display:none;max-width:250px;padding:7px 10px;background:var(--ink);color:#f1ece0;border-radius:8px;font-size:12px;pointer-events:none;z-index:3}
+#cap{position:absolute;left:50%;transform:translateX(-50%);bottom:78px;width:max-content;max-width:min(640px,calc(100% - 24px));padding:8px 14px;font-size:12.5px;line-height:1.45;background:rgba(23,32,30,.88);color:#f1ece0;border-radius:12px;text-align:center;pointer-events:none;z-index:2}
+#cap b{display:block;color:#fdba74}
+#wm{position:absolute;right:14px;top:12px;z-index:2;pointer-events:none;font:italic 600 12px system-ui;color:#1f2926;opacity:.6;text-shadow:0 1px 2px #fff8;text-align:right}
+#info h2{margin:0 0 4px;font-size:16px;color:var(--acc)}#info h4{margin:10px 0 2px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}#info p{margin:0}
+footer{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);max-width:calc(100% - 24px);z-index:6;background:rgba(23,32,30,.95);border-radius:16px;padding:7px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+#btns{display:flex;gap:6px;align-items:center;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#5b6a65 transparent;padding-bottom:2px}
+#btns>*{flex:none;white-space:nowrap}
+footer button{background:#2a3733;color:#f1ece0;border-color:#3d4c47}
+footer button:hover{border-color:#fb923c;color:#fdba74}
+footer button.on{background:var(--acc);border-color:#fb923c;color:#fff}
+#bSim{background:var(--acc);border-color:#fb923c;color:#fff;font-weight:700}
+.ov{position:absolute;inset:10px 10px 74px;display:none;overflow:auto;background:rgba(255,255,251,.985);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:14px;z-index:5;box-shadow:0 10px 30px rgba(0,0,0,.25)}.ov.show{display:block}
+.cg{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.4fr);gap:16px;margin-top:8px}
+.ov h4{margin:10px 0 4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}
+.ov label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0}
+.ov input{background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100px;font:inherit}
+.ov table input{width:78px}.ov td{padding:2px 4px}
+.rt{width:100%;border-collapse:collapse;font-size:12px;margin:4px 0}.rt th,.rt td{border:1px solid var(--line);padding:3px 6px;text-align:right}.rt th{background:#f3efe2}.rt th:first-child,.rt td:first-child{text-align:left}
+#logv .rt th,#logv .rt td{text-align:left;vertical-align:top}
+.fm{color:var(--mut);font-size:12px}.ok{color:#15803d}.bad{color:#b45309}
+#ikv .paper{max-width:820px;margin:0 auto;background:#fbfaf6;color:#1a1a1a;border:1px solid var(--line);border-radius:6px;padding:18px 22px 22px;font-size:13.5px;line-height:1.55}
+#ikv .bar{display:flex;justify-content:space-between;align-items:center;max-width:820px;margin:0 auto 10px}#ikv .bar h2{margin:0;font-size:16px;color:var(--acc)}
+#ikv h3{margin:16px 0 6px;font-size:14px;letter-spacing:0;text-transform:none;color:#111}#ikv ol{margin:4px 0;padding-left:26px}#ikv li{margin:4px 0}
+#ikv table{width:100%;border-collapse:collapse;margin-bottom:10px}#ikv td{border:1.5px solid #222;padding:5px 8px;font-size:12.5px}
+#app.full header,#app.full #left,#app.full #right{display:none!important}
+#fsX{display:none;position:absolute;top:10px;right:10px;z-index:8;width:38px;height:34px;padding:0;font-size:18px}
+#app.full #fsX{display:block}
+@media(max-width:900px){
+ #left{width:min(72vw,250px)}#right{width:min(88vw,340px)}
+ aside{bottom:76px}
+ header .sub{display:none}.cg{grid-template-columns:1fr}
+ #cap{bottom:70px;max-height:30%;overflow:auto}
+}
+</style></head>
+<body>
+<div id="app">
+<header><button id="mBtn" class="hb" aria-label="Menu">☰</button><b>LAB VIRTUAL UV-Vis</b><span class="sub">Penetapan Kadar Thiamin dalam Sampel Tablet Vitamin B1 secara Spektrofotometri UV — Politeknik AKA Bogor · D3 Analisis Kimia · Atha Mahardika Nawan</span><button id="iBtn" class="hb" aria-label="Info">ⓘ</button><button id="fsBtn" class="hb" title="Layar penuh">⛶</button><div id="prog"></div></header>
+<div id="stage" class="hr">
+<aside id="left"><h3>Tahapan Kerja</h3><div id="pipe"></div><h3>Jelajahi Instrumen</h3><div id="modes"></div><h3>Komponen &amp; Ruang Lab</h3><div id="list"></div></aside>
+<main id="view"><div id="wm">Politeknik AKA Bogor · D3 Analisis Kimia<br>Atha Mahardika Nawan</div><div id="labels"></div><div id="tip"></div><div id="cap"></div><div id="cal" class="ov"></div><div id="ikv" class="ov"></div><div id="logv" class="ov"></div><button id="fsX" title="Keluar layar penuh">✕</button></main>
+<aside id="right"><div id="info"></div></aside>
+</div>
+<footer><div id="btns"><button id="bSim">▶ Mulai Simulasi</button><button id="bSpd">⏩ Kecepatan 1×</button><button id="bTour">🎥 Tur Lab</button><button id="bLbl">🔍 Lihat Komponen</button><button id="bPath">🛤 Jalur Berkas Sinar</button><button id="bPrin">⚙ Prinsip Kerja</button><button id="bX">👁 Tembus Pandang</button><button id="bCal">📊 Perhitungan</button><button id="bLog">📝 Log Book</button><button id="bIK">📖 Buku IK</button><button id="bPow">⏻ Nyalakan Alat</button><button id="bLid">Buka Tutup Cuvet</button><button id="bCam">Reset Kamera</button><button id="bFull">⛶ Layar Penuh</button></div></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>if(!window.THREE)document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>if(window.THREE&&!THREE.OrbitControls)document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');</script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+if(!window.THREE||!THREE.OrbitControls){$('view').innerHTML='<p style="padding:20px">Pustaka Three.js gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.</p>';return;}
+const H=Math.PI/2;
+
+/* ===== 1. DATA KOMPONEN: [Nama, Fungsi, Prinsip kerja, Hubungan dengan analisis, Contoh masalah, posisi label] ===== */
+const D={
+lampD2:["Lampu Deuterium (D₂)","Lampu ini dipakai sebagai sumber sinar ultraviolet (±190–340 nm). Karena Thiamin diukur pada λ ≈ 246 nm, lampu D₂-lah yang dipakai selama pengukuran.","Gas deuterium bertekanan rendah dialiri arus listrik, sehingga molekulnya tereksitasi dan sinar UV yang kontinu dipancarkan. Lampu perlu dipanaskan dulu (warm-up) 15–30 menit supaya intensitasnya stabil.","Intensitas sinar (I₀) yang stabil sangat menentukan baseline dan kelinearan kurva kalibrasi.","Lampu yang hampir habis umurnya ditandai noise tinggi dan energi rendah; bila belum cukup dipanaskan, baseline akan bergeser; jendela lampu yang kotor juga menurunkan energi.",[-1.95,1.15,-.38]],
+lampW:["Lampu Tungsten-Halogen (W)","Lampu ini dipakai sebagai sumber sinar daerah tampak dan IR dekat (±330–1100 nm).","Filamen tungsten dipijarkan hingga berpendar. Gas halogen di dalamnya membuat tungsten yang menguap dikembalikan ke filamen, sehingga umur lampu lebih panjang.","Pada pengukuran Thiamin (daerah UV) lampu W tidak dipakai. Lampu ini baru dipakai bila spektrum yang dipindai melewati ±340 nm, dan pergantian lampu dilakukan otomatis oleh instrumen.","Filamen yang putus menyebabkan tidak ada energi di daerah tampak; lampu yang tersentuh tangan telanjang akan terkontaminasi dan cepat rusak.",[-1.95,1.2,.38]],
+mono:["Monokromator","Bagian ini memisahkan sinar polikromatik dari lampu sehingga hanya panjang gelombang yang diinginkan (246 nm) yang diteruskan.","Cahaya masuk lewat celah, dipantulkan cermin kolimator ke kisi difraksi, lalu sinar yang sudah terurai difokuskan kembali oleh cermin fokus menuju celah keluar. Panjang gelombang diubah dengan cara memutar kisi.","Ketepatan λ sangat berpengaruh pada sensitivitas, karena Thiamin diukur tepat di puncak serapannya. Sinar yang sempit juga membantu menjaga kepatuhan terhadap Hukum Beer–Lambert.","Panjang gelombang yang bergeser perlu dikalibrasi ulang; kisi yang terkena uap asam atau cermin yang berembun akan memunculkan stray light.",[-.2,1.45,-.4]],
+slit:["Celah (Slit)","Lebar pita spektral (misalnya 1 nm) dan jumlah energi yang lolos diatur oleh celah masuk dan celah keluar.","Celah yang sempit menghasilkan resolusi tinggi tetapi energi rendah; celah yang lebar sebaliknya, energi tinggi tetapi puncak melebar.","Untuk puncak Thiamin yang cukup lebar, celah 1 nm sudah memberi keseimbangan yang baik antara noise dan resolusi.","Celah yang terlalu lebar menyebabkan penyimpangan dari Beer–Lambert, sedangkan celah yang terlalu sempit membuat noise meningkat.",[-1,1.2,-.9]],
+bs:["Beam Splitter (Pembagi Berkas)","Berkas monokromatis dibagi menjadi dua oleh bagian ini: satu menuju cuvet sampel dan satu lagi menuju cuvet referensi (double-beam).","Sebagian cahaya diteruskan oleh plat setengah-cermin ke cuvet referensi, sedangkan sisanya dipantulkan ke cuvet sampel melalui sebuah cermin.","Dengan sistem double-beam, I dan I₀ diukur bersamaan sehingga drift lampu dikoreksi otomatis dan baseline lebih stabil.","Plat yang kotor atau tergores akan merusak keseimbangan kedua berkas, sehingga baseline miring.",[1.35,1.25,-.5]],
+cuvComp:["Kompartemen Cuvet","Dua cuvet (referensi dan sampel) ditempatkan di sini, tepat pada jalur berkas, dan dilindungi dari cahaya luar oleh tutup. Tutup dibuka dan ditutup dengan cara diklik.","Cuvet ditahan oleh holder dalam posisi tegak lurus terhadap berkas sehingga jalur optik b = 1 cm tetap terjaga. Tutup harus ditutup rapat selama pengukuran agar tidak ada cahaya luar yang masuk.","Posisi cuvet yang tetap membuat b konstan, jadi absorbansi hanya dipengaruhi oleh konsentrasi (A = ε·b·c).","Tutup yang tidak rapat menimbulkan stray light dan nilai A tidak stabil; tumpahan HCl di holder dapat menyebabkan korosi dan pembacaan yang salah.",[1.9,1.6,-.5]],
+cuvette:["Cuvet Kuarsa","Larutan standar, sampel, dan blanko ditampung di dalam cuvet ini. Lebar jalur optiknya 1 cm, dan ukurannya dibuat kecil karena hanya sekitar 3 mL larutan yang dibutuhkan.","Kuarsa tetap tembus cahaya hingga ±190 nm, sedangkan kaca biasa dan plastik sudah menyerap sinar di bawah ±320 nm sehingga tidak boleh dipakai untuk UV. Cuvet dipegang pada sisi buram dan dibilas dengan larutan yang akan diukur.","Cuvet referensi diisi blanko (HCl 1:60), sedangkan cuvet sampel diisi larutan yang diukur, dimulai dari konsentrasi terkecil.","Sidik jari, gelembung udara, atau goresan membuat pembacaan A salah; cuvet yang tidak dibilas menyebabkan carry-over antar larutan.",[1.9,1.25,-.1]],
+detector:["Detektor (PMT / Fotodioda)","Intensitas cahaya yang lolos (I dan I₀) diubah menjadi sinyal listrik oleh detektor.","Pada PMT, elektron dibebaskan dari fotokatoda oleh foton, lalu dilipatgandakan oleh deretan dinoda. Pada fotodioda, foton langsung diubah menjadi arus. Sinyal yang dihasilkan dikuatkan dan dikirim ke PC.","Rasio I/I₀ diubah menjadi transmitans T, kemudian absorbansi A = −log T ditampilkan pada layar dan software.","Kebocoran cahaya, PMT yang sudah lelah, atau dark current yang tinggi akan menyebabkan noise dan baseline yang tidak stabil.",[2.55,1.2,-.5]],
+display:["Layar LCD Instrumen","Status instrumen, panjang gelombang (λ), absorbansi (Abs), dan mode pengukuran ditampilkan di layar ini.","Sinyal detektor dibaca oleh mikroprosesor dan tampilan diperbarui secara berkala. Instrumen juga dihubungkan ke PC melalui kabel USB.","Dari layar ini bisa segera diketahui bahwa λ sudah 246 nm, lampu sudah menyala, dan pembacaan sudah stabil.","Bila kode kesalahan self-check (lampu/kisi) muncul, buku IK harus dibuka dan teknisi dihubungi.",[-.8,1.4,1.55]],
+power:["Tombol Power Instrumen","Instrumen dinyalakan dan dimatikan dengan tombol ini. Tombol hijau di panel depan cukup diklik.","Begitu dinyalakan, self-check dijalankan: lampu, motor kisi, filter, dan kalibrasi λ diperiksa. Prosesnya memakan waktu ±1–3 menit.","Instrumen dan UPS harus sudah menyala sebelum software dapat dihubungkan. Saat dimatikan, software ditutup lebih dulu, baru instrumen dimatikan.","Bila instrumen dimatikan ketika software masih terhubung, data bisa hilang; bila inisialisasi tidak ditunggu, koneksi akan error.",[-1.95,.6,1.55]],
+ups:["UPS","Daya listrik instrumen, CPU, dan monitor dijaga tetap stabil oleh UPS, sehingga alat tidak mati mendadak saat tegangan turun. Tombol hijau diklik untuk ON/OFF.","Saat tegangan PLN turun atau padam, listrik disuplai oleh baterai melalui inverter selama beberapa menit.","Fluktuasi listrik dapat merusak lampu dan elektronik, karena itu UPS selalu dinyalakan lebih dulu (IK A.1).","Baterai yang lemah tidak akan bertahan saat listrik padam; UPS yang dimatikan sebelum komputer shutdown dapat merusak data.",[-4.7,1.0,-.4]],
+pc:["PC & Monitor (UVProbe)","Software UVProbe/LabSolutions UV-Vis dijalankan di sini: mode diatur, baseline dikoreksi, λmax dipindai, standar diukur, dan kurva kalibrasi disusun. Layar diklik untuk membuka tabel perhitungan.","Sinyal dari instrumen dibaca oleh software, absorbansi dihitung, lalu regresi linear y = a + bx dibuat. Konsentrasi sampel kemudian dihitung dari persamaan tersebut.","Di sinilah sinyal absorbansi diubah menjadi kadar Thiamin (mg/L → mg/tablet dan mg/kg).","Baseline yang belum diatur (autozero), koneksi USB yang terputus, atau kurva yang tidak linear (r rendah) adalah masalah yang paling sering ditemui.",[5,1.95,.3]],
+flask:["Labu Takar Sampel Presisi 1–5","Lima labu takar 200 mL berisi larutan sampel tablet Vitamin B1 yang dibuat berulang (Presisi 1 sampai 5) untuk mengetahui ketelitian cara kerja.","Setiap labu diisi serbuk tablet yang ditimbang sendiri-sendiri, dilarutkan dengan HCl 1:60, ditepatkan sampai tanda tera, lalu disaring. Filtrat dipipet 5 mL ke labu 100 mL dan diencerkan sampai tanda tera.","Hasil kelima ulangan dipakai untuk menghitung %RSD. Syaratnya ≤ 2 %; makin kecil nilainya, makin baik presisi analisisnya.","Meniskus yang tidak tepat tera, larutan yang tidak homogen, atau partikel yang tidak tersaring akan menyebabkan hamburan cahaya dan A yang terlalu tinggi, sehingga %RSD membesar.",[-6.0,1.3,2.5]],
+akur:["Labu Takar Sampel Akurasi (Spike)","Labu takar berisi sampel yang sudah ditambah larutan standar Thiamin (spike) dalam jumlah tertentu.","Sampel dipreparasi seperti sampel Presisi, kemudian larutan standar ditambahkan (spike 2,5 mL dari 100 mg/L). Selisih konsentrasi sebelum dan sesudah penambahan dibandingkan dengan jumlah yang ditambahkan.","Dari sini %Recovery dihitung. Syaratnya 85–115 %, yang menunjukkan bahwa metode tidak terganggu oleh matriks tablet.","Pemipetan spike yang tidak akurat atau larutan yang tidak homogen menyebabkan %Recovery keluar dari rentang syarat.",[-3.2,1.2,2.5]],
+std:["Deret Standar Thiamin (0–25 mg/L)","Enam labu takar 100 mL berisi standar 0, 5, 10, 15, 20, dan 25 mg/L.","Larutan induk 1000 mg/L dipipet sebanyak 0; 0,5; 1,0; 1,5; 2,0; dan 2,5 mL, lalu ditepatkan dengan HCl 1:60 sampai tanda tera (C₁V₁ = C₂V₂).","Absorbansi standar dipakai untuk membuat kurva kalibrasi y = bx + a dengan r² ≈ 0,997.","Pemipetan yang kurang teliti atau larutan yang tidak dihomogenkan membuat kurva tidak linear.",[-1.4,.95,2.5]],
+hcl:["Gelas Piala Plastik Bergagang (HCl 1:60)","Larutan pengencer HCl 1:60 ditampung di dalam gelas piala plastik bergagang ini, sehingga mudah dituang dan tidak mudah pecah.","HCl pekat diencerkan dengan air dengan perbandingan 1 : 60 (asam selalu ditambahkan ke dalam air). Thiamin HCl stabil dalam suasana asam dan mudah rusak dalam suasana basa.","Larutan ini dipakai untuk melarutkan, mengencerkan, dan sebagai blanko. Blanko HCl 1:60 juga dipakai sebagai referensi (autozero), sehingga serapan pelarut tidak ikut terukur.","APD wajib dipakai (jas lab, sarung tangan, kacamata); bila pelarut blanko dan sampel berbeda, baseline akan bergeser.",[1.4,1.0,2.5]],
+ik:["Buku Instruksi Kerja (IK)","Panduan tertulis penggunaan Spektrofotometer UV-Vis double-beam dimuat di dalam buku ini: persiapan, pengoperasian, dan cara mematikan alat. Bukunya diklik untuk dibaca.","Urutan kerja yang baku diikuti oleh analis: persiapan → pengoperasian (baseline, scan λmax, pengukuran standar dan sampel) → alat dimatikan dan area kerja dirapikan.","Urutan yang baku menjaga keselamatan, umur lampu, dan keterulangan hasil.","Langkah yang terlewat (misalnya warm-up atau autozero) membuat data tidak valid; Log Book yang tidak diisi juga menyulitkan penelusuran.",[-9.0,.5,2.3]],
+hood:["Lemari Asam (Fume Hood)","Pekerjaan dengan bahan kimia yang uapnya berbahaya, misalnya HCl pekat, dilakukan di dalam lemari ini. Uapnya dihisap ke atas dan dibuang melalui saluran duct.","Aliran udara masuk melalui bukaan sash ditimbulkan oleh kipas penghisap, sehingga uap tidak mengarah ke wajah analis. Sash diturunkan serendah mungkin saat bekerja.","HCl pekat diencerkan menjadi HCl 1:60 di dalam lemari asam, dan asam selalu ditambahkan ke dalam air.","Sash yang terlalu terbuka membuat aliran udara tidak efektif; bila kipas mati, uap asam akan menyebar ke ruangan.",[8.4,2.6,-1.2]],
+board:["Papan Tulis Alur Analisis","Tujuh tahap penetapan kadar Thiamin, beserta rumus dan syarat validasi (R², %RSD, %Recovery), dirangkum di papan tulis ini.","Alur analisis disusun berurutan: alat disiapkan, larutan dibuat, sampel dipreparasi, λ maksimum ditentukan, absorbansi diukur, dan kadar dihitung.","Urutan yang jelas menjaga keterulangan hasil dan memudahkan penelusuran bila terjadi penyimpangan.","Tahap yang terlewat (misalnya autozero) membuat data tidak dapat dipertanggungjawabkan.",[-2.6,6.1,-3.5]],
+spec:["Poster Daerah Spektrum UV–Vis","Daerah UV (190–400 nm), tampak (400–700 nm), dan IR dekat ditunjukkan pada poster ini, lengkap dengan rentang kerja lampu D₂ dan tungsten-halogen.","Lampu D₂ dipakai untuk daerah UV dan lampu W untuk daerah tampak; pergantian lampu dilakukan otomatis di sekitar 330–340 nm.","Thiamin diukur pada λ maksimum 246 nm, sehingga lampu D₂ yang dipakai.","Bila lampu tidak sesuai dengan daerah pengukuran, energi akan rendah dan noise tinggi.",[3.4,6.1,-3.5]],
+bl:["Poster Hukum Beer–Lambert","Hubungan antara intensitas cahaya datang (I₀), intensitas yang diteruskan (I), tebal cuvet (b), dan konsentrasi (c) digambarkan pada poster ini.","Absorbansi dinyatakan sebagai A = −log T = log(I₀/I) = ε·b·c; absorbansi berbanding lurus dengan konsentrasi pada daerah linear (A ≈ 0,1–1).","Hukum ini menjadi dasar kurva kalibrasi y = bx + a dan perhitungan kadar Thiamin.","Konsentrasi yang terlalu tinggi, sinar yang tidak monokromatis, atau stray light menyebabkan kurva menyimpang dari linearitas.",[6.95,6.1,-3.5]],
+ptab:["Poster Tabel Periodik","Unsur-unsur ditampilkan pada poster ini, dan unsur penyusun Thiamin HCl (H, C, N, O, S, Cl) diberi tanda.","Cincin pirimidin dan tiazol pada Thiamin tersusun dari C, N, dan S dengan ikatan rangkap terkonjugasi, yang menyerap sinar UV.","Pengetahuan tentang unsur penyusun membantu pemahaman tentang kromofor dan perhitungan massa molekul relatif.","—",[-8.1,6.1,-3.5]],
+k3:["Rambu Keselamatan Kerja (K3)","Penggunaan APD, bahaya radiasi UV, bahan korosif, larangan makan/minum, pencuci mata darurat, dan kacamata pelindung diingatkan oleh rambu-rambu ini.","Rambu dipasang setinggi pandangan analis agar aturan keselamatan selalu teringat.","HCl 1:60 bersifat korosif dan lampu D₂ memancarkan UV, sehingga APD wajib dipakai dan kompartemen ditutup saat pengukuran.","Rambu yang rusak atau terhalang membuat aturan K3 terabaikan; APD yang tidak lengkap meningkatkan risiko cedera akibat bahan kimia.",[-.2,3.8,-3.5]],
+apar:["Alat Pemadam Api Ringan (APAR)","Api yang masih kecil, misalnya akibat korsleting listrik atau bahan mudah terbakar, dapat dipadamkan dengan alat ini.","Pin pengaman ditarik, tuas ditekan, lalu bahan pemadam disemprotkan ke pangkal api.","Laboratorium dipenuhi listrik, pelarut organik (etanol), dan instrumen, sehingga APAR harus selalu siap dipakai.","Jarum manometer di zona merah atau APAR yang sudah kedaluwarsa tidak dapat dipakai.",[10.1,2.2,1.8]],
+reagen:["Rak Reagen","Botol-botol reagen yang sering dipakai disimpan di rak ini.","Setiap botol diberi label yang jelas; reagen yang tidak kompatibel dipisahkan, dan bahan yang peka cahaya disimpan dalam botol gelap.","Reagen HCl dan standar Thiamin diambil dari rak ini pada tahap persiapan.","Label yang pudar membuat reagen tertukar; botol yang dibiarkan terbuka menyebabkan kontaminasi atau penguapan.",[-10.2,5.0,-.6]],
+body:["Bodi Instrumen","Komponen optik dan elektronik dilindungi oleh cangkang ini. Mode Tembus Pandang dapat diaktifkan untuk melihat bagian dalamnya.","Getaran diredam oleh rangka yang kokoh, dan jalur optik ditutup rapat agar terbebas dari debu dan cahaya luar.","Jalur cahaya dijaga tetap sejajar sehingga baseline stabil.","Bila instrumen digeser atau terkena getaran, optik bisa tidak sejajar; ventilasi yang tertutup membuat panas berlebih.",[1.0,1.95,1.5]]
+};
+const SHORT=id=>D[id][0].split(' (')[0];
+
+/* ===== 2. SCENE ===== */
+const view=$('view');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xb8c4c0);scene.fog=new THREE.Fog(0xb8c4c0,45,95);
+const camera=new THREE.PerspectiveCamera(40,1,.1,120);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+view.insertBefore(renderer.domElement,view.firstChild);
+scene.add(new THREE.HemisphereLight(0xffffff,0xb8b09a,.9));
+const key=new THREE.DirectionalLight(0xfff4e0,1.1);key.position.set(5,13,9);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0003;key.shadow.normalBias=.03;Object.assign(key.shadow.camera,{left:-14,right:14,top:14,bottom:-14,far:45});scene.add(key);
+const rim=new THREE.DirectionalLight(0xcfe6ff,.35);rim.position.set(-8,5,-8);scene.add(rim);
+const lampLight=new THREE.PointLight(0x7aa8ff,0,5);lampLight.position.set(-1.8,.9,0);scene.add(lampLight);
+
+const M=(c,r,m,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:r,metalness:m},o));
+const mat={body:new THREE.MeshPhysicalMaterial({color:0xe3e5e8,roughness:.38,metalness:.05,clearcoat:.5,clearcoatRoughness:.3}),grey:M(0x9aa3ab,.5,.25),dark:M(0x1b2026,.6,.25),metal:M(0xc3cbd2,.3,.7),teal:M(0x0f9488,.4,.2),
+ glass:M(0x9fd8ff,.05,.1,{transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide})};
+const tx=c=>{const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;};
+const root=new THREE.Group();scene.add(root);
+const byId={},pick=[],shells=[];
+const B=(w,h,d)=>new THREE.BoxGeometry(w,h,d),C=(r,h,s=32)=>new THREE.CylinderGeometry(r,r,h,s);
+function add(geo,m,x,y,z,id,o={}){const me=new THREE.Mesh(geo,m.clone());me.position.set(x,y,z);
+ if(o.rx)me.rotation.x=o.rx;if(o.ry)me.rotation.y=o.ry;if(o.rz)me.rotation.z=o.rz;
+ (o.parent||root).add(me);me.castShadow=!m.transparent;me.receiveShadow=true;
+ if(id){me.userData.id=id;(byId[id]=byId[id]||[]).push(me);pick.push(me);}
+ if(o.shell){me.userData.shell=1;shells.push(me);}return me;}
+function plate(t,w,h,x,y,z,bg,fg,par){const c=document.createElement('canvas');c.width=1024;c.height=Math.max(32,Math.round(1024*h/w));const g=c.getContext('2d');
+ if(bg){g.fillStyle=bg;g.fillRect(0,0,1024,c.height);}g.fillStyle=fg;g.font='bold '+Math.round(c.height*.5)+'px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(t,512,c.height/2,980);
+ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx(c),transparent:true}));m.position.set(x,y,z);(par||root).add(m);return m;}
+
+/* --- Ruang laboratorium: lantai, dinding berkeramik, meja, lemari asam, wastafel, poster --- */
+function canv(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c;}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function RB(w,h,d,r){const bv=Math.min(.03,d/2-.002,r*.6),iw=w-2*bv,ih=h-2*bv,q=Math.max(.002,Math.min(r-bv,iw/2-.001,ih/2-.001)),x=-iw/2,y=-ih/2,s=new THREE.Shape();
+ s.moveTo(x+q,y);s.lineTo(x+iw-q,y);s.quadraticCurveTo(x+iw,y,x+iw,y+q);s.lineTo(x+iw,y+ih-q);s.quadraticCurveTo(x+iw,y+ih,x+iw-q,y+ih);s.lineTo(x+q,y+ih);s.quadraticCurveTo(x,y+ih,x,y+ih-q);s.lineTo(x,y+q);s.quadraticCurveTo(x,y,x+q,y);
+ const dep=Math.max(.002,d-2*bv),g=new THREE.ExtrudeGeometry(s,{depth:dep,bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:2,curveSegments:6});g.translate(0,0,-dep/2);return g;}
+function RBF(w,d,t,r){const g=RB(w,d,t,r);g.rotateX(-H);return g;}
+function tileTex(base,grout,gw,rep){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle=grout;g.fillRect(0,0,256,256);g.fillStyle=base;g.fillRect(gw,gw,256-2*gw,256-2*gw);
+ const gr=g.createLinearGradient(0,0,256,256);gr.addColorStop(0,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(0,0,0,.08)');g.fillStyle=gr;g.fillRect(gw,gw,256-2*gw,256-2*gw);
+ const t=tx(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);return t;}
+const BW0=20,BD0=7.2,WZ=-3.62,WX=10.4,LW=WX*2,DEP=16;
+// meja kerja berkeramik putih + lemari bawah
+add(B(BW0,.2,BD0),M(0xf2f2ee,.28,0),0,-.1,0);
+{const m=new THREE.Mesh(new THREE.PlaneGeometry(BW0,BD0),new THREE.MeshPhysicalMaterial({map:tileTex('#f4f4f2','#c3c8cf',5,[BW0/1.3,BD0/1.3]),roughness:.25,clearcoat:.6}));m.rotation.x=-H;m.position.y=.001;m.receiveShadow=true;root.add(m);}
+add(B(BW0,.05,.05),mat.metal,0,-.03,BD0/2);
+add(B(BW0-.3,.34,BD0-.7),M(0x20262a,.7,.1),0,-3.05,-.1);
+add(B(BW0-.3,2.62,BD0-.5),M(0xe4e8e5,.5,.1),0,-1.52,-.1);
+for(let i=0;i<10;i++){const x=-9+i*2;add(B(1.9,2.5,.05),M(i%3===1?0x7d9f8f:0xf3f5f2,.45,.1),x,-1.52,3.28);add(B(.05,.7,.05),mat.metal,x+(i%2?-.75:.75),-1.0,3.34);}
+// lantai vinil abu-abu
+{const f=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({map:tileTex('#d9dcd8','#aeb3ae',4,[24,24]),roughness:.32,metalness:.05}));f.rotation.x=-H;f.position.y=-3.22;f.receiveShadow=true;root.add(f);}
+// dinding: keramik hijau-sage di bawah, cat gading di atas (3 sisi; tampak hanya dari dalam ruangan)
+function wp(w,h,x,y,z,ry,m){const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);p.position.set(x,y,z);p.rotation.y=ry;p.receiveShadow=true;root.add(p);return p;}
+const tileM=(w,h)=>new THREE.MeshStandardMaterial({map:tileTex('#a9c3b3','#869f92',3,[w/1.2,h/1.2]),roughness:.35,metalness:.05});
+const paintM=new THREE.MeshStandardMaterial({color:0xf0eee4,roughness:.9,metalness:0});
+wp(LW,6.22,0,-.11,WZ,0,tileM(LW,6.22));wp(LW,7.2,0,6.6,WZ,0,paintM);
+wp(DEP,6.22,-WX,-.11,WZ+DEP/2,H,tileM(DEP,6.22));wp(DEP,7.2,-WX,6.6,WZ+DEP/2,H,paintM);
+wp(DEP,6.22,WX,-.11,WZ+DEP/2,-H,tileM(DEP,6.22));wp(DEP,7.2,WX,6.6,WZ+DEP/2,-H,paintM);
+add(B(LW,.1,.08),mat.metal,0,3.02,WZ+.04);add(B(.08,.1,DEP),mat.metal,-WX+.04,3.02,WZ+DEP/2);add(B(.08,.1,DEP),mat.metal,WX-.04,3.02,WZ+DEP/2);
+// poster berbingkai (dapat diklik bila diberi id)
+function poster(w,h,x,y,z,ry,id,draw,frame){const g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=ry;root.add(g);
+ add(B(w+.14,h+.14,.05),M(frame||0x2a3330,.5,.3),0,0,.025,id,{parent:g});
+ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx(canv(Math.round(w*220),Math.round(h*220),draw))}));m.position.z=.055;g.add(m);
+ if(id){m.userData.id=id;(byId[id]=byId[id]||[]).push(m);pick.push(m);}return g;}
+const dBoard=(g,W,Hh)=>{g.fillStyle='#fbfbf7';g.fillRect(0,0,W,Hh);g.fillStyle='#17201e';g.textAlign='center';g.textBaseline='middle';g.font='bold '+Math.round(Hh*.075)+'px sans-serif';g.fillText('ALUR PENETAPAN KADAR THIAMIN PADA TABLET VITAMIN B1',W/2,Hh*.09,W*.94);
+ const st=['Alat disiapkan','Larutan induk dibuat','Deret standar dibuat','Sampel dipreparasi','λ maksimum ditentukan','Absorbansi diukur','Kadar dihitung'],cl=['#1d4ed8','#c2410c','#15803d','#7e22ce'];
+ st.forEach((s,i)=>{const row=i<4?0:1,c=i<4?i:i-4,n=i<4?4:3,bw=W*.19,bh=Hh*.2,gx=(W-n*bw)/(n+1),x=gx+c*(bw+gx),y=Hh*.2+row*Hh*.3;
+  g.lineWidth=5;g.strokeStyle=cl[i%4];g.fillStyle='#fff';rr(g,x,y,bw,bh,16);g.fill();g.stroke();
+  g.fillStyle=cl[i%4];g.beginPath();g.arc(x+bw*.12,y+bh*.5,bh*.22,0,7);g.fill();g.fillStyle='#fff';g.font='bold '+Math.round(bh*.28)+'px sans-serif';g.fillText(String(i+1),x+bw*.12,y+bh*.52);
+  g.fillStyle='#17201e';g.font='bold '+Math.round(bh*.19)+'px sans-serif';g.textAlign='left';g.fillText(s,x+bw*.27,y+bh*.5,bw*.68);g.textAlign='center';
+  if(c<n-1){g.fillStyle='#6b7280';g.font='bold '+Math.round(bh*.3)+'px sans-serif';g.fillText('→',x+bw+gx/2,y+bh*.5);}});
+ g.fillStyle='#fef3c7';rr(g,W*.04,Hh*.8,W*.92,Hh*.15,14);g.fill();g.fillStyle='#17201e';g.font='bold '+Math.round(Hh*.05)+'px sans-serif';g.fillText('A = ε·b·c   |   y = bx + a   |   R² ≥ 0,995 · %RSD ≤ 2 % · %Recovery 85–115 %',W/2,Hh*.875,W*.9);};
+const dSpec=(g,W,Hh)=>{g.fillStyle='#10201d';g.fillRect(0,0,W,Hh);g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fdba74';g.font='bold '+Math.round(Hh*.07)+'px sans-serif';g.fillText('DAERAH SPEKTRUM UV–Vis',W/2,Hh*.09);
+ const x0=W*.06,x1=W*.94,X=n=>x0+(n-190)/(800-190)*(x1-x0),y=Hh*.26,h=Hh*.2;
+ const uv=g.createLinearGradient(X(190),0,X(400),0);uv.addColorStop(0,'#2e1065');uv.addColorStop(1,'#6d28d9');g.fillStyle=uv;g.fillRect(X(190),y,X(400)-X(190),h);
+ const vis=g.createLinearGradient(X(400),0,X(700),0);[['#7c3aed',0],['#2563eb',.18],['#06b6d4',.33],['#22c55e',.5],['#eab308',.65],['#f97316',.8],['#dc2626',1]].forEach(s=>vis.addColorStop(s[1],s[0]));g.fillStyle=vis;g.fillRect(X(400),y,X(700)-X(400),h);
+ g.fillStyle='#3b0a0a';g.fillRect(X(700),y,X(800)-X(700),h);
+ g.fillStyle='#fff';g.font='bold '+Math.round(h*.3)+'px sans-serif';g.fillText('UV',(X(190)+X(400))/2,y+h/2);g.fillText('Tampak (Vis)',(X(400)+X(700))/2,y+h/2);g.fillText('IR dekat',(X(700)+X(800))/2,y+h/2,X(800)-X(700)-6);
+ g.font=Math.round(Hh*.045)+'px sans-serif';g.fillStyle='#9fb3ac';for(let n=200;n<=800;n+=100)g.fillText(String(n),X(n),y+h+Hh*.05);g.fillText('λ (nm)',W/2,y+h+Hh*.11);
+ g.fillStyle='#60a5fa';g.fillRect(X(190),Hh*.68,X(340)-X(190),Hh*.045);g.fillStyle='#fb923c';g.fillRect(X(330),Hh*.78,X(800)-X(330),Hh*.045);
+ g.fillStyle='#e5e7eb';g.font=Math.round(Hh*.042)+'px sans-serif';g.textAlign='left';g.fillText('Lampu D₂ (190–340 nm)',X(190)+4,Hh*.68-Hh*.04);g.fillText('Lampu tungsten-halogen W (330–800 nm)',X(330)+4,Hh*.78+Hh*.08);
+ g.strokeStyle='#fde047';g.lineWidth=4;g.beginPath();g.moveTo(X(246),y-Hh*.06);g.lineTo(X(246),y+h);g.stroke();g.fillStyle='#fde047';g.font='bold '+Math.round(Hh*.05)+'px sans-serif';g.fillText('Thiamin λmax = 246 nm',X(246)+8,Hh*.175);};
+const dBL=(g,W,Hh)=>{g.fillStyle='#fbfbf7';g.fillRect(0,0,W,Hh);g.textAlign='center';g.textBaseline='middle';g.fillStyle='#17201e';g.font='bold '+Math.round(Hh*.075)+'px sans-serif';g.fillText('HUKUM BEER–LAMBERT',W/2,Hh*.08);
+ g.fillStyle='#fde68a';g.strokeStyle='#17201e';g.lineWidth=4;g.fillRect(W*.38,Hh*.3,W*.24,Hh*.26);g.strokeRect(W*.38,Hh*.3,W*.24,Hh*.26);
+ g.strokeStyle='#7c3aed';g.lineWidth=9;g.beginPath();g.moveTo(W*.04,Hh*.43);g.lineTo(W*.37,Hh*.43);g.stroke();g.strokeStyle='#c4b5fd';g.lineWidth=4;g.beginPath();g.moveTo(W*.63,Hh*.43);g.lineTo(W*.96,Hh*.43);g.stroke();
+ g.fillStyle='#7c3aed';g.font='bold '+Math.round(Hh*.07)+'px sans-serif';g.fillText('I₀',W*.15,Hh*.35);g.fillStyle='#8b7ad8';g.fillText('I',W*.85,Hh*.35);
+ g.fillStyle='#17201e';g.font=Math.round(Hh*.05)+'px sans-serif';g.fillText('b = 1 cm',W/2,Hh*.62);
+ g.font='bold '+Math.round(Hh*.06)+'px sans-serif';g.fillText('T = I / I₀',W/2,Hh*.72);g.fillText('A = −log T = log (I₀/I)',W/2,Hh*.8,W*.92);g.fillStyle='#c2410c';g.font='bold '+Math.round(Hh*.085)+'px sans-serif';g.fillText('A = ε · b · c',W/2,Hh*.9);};
+const SYM='H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr'.split(' ');
+const dPT=(g,W,Hh)=>{g.fillStyle='#fbfbf7';g.fillRect(0,0,W,Hh);g.textAlign='center';g.textBaseline='middle';g.fillStyle='#17201e';g.font='bold '+Math.round(Hh*.065)+'px sans-serif';g.fillText('TABEL PERIODIK UNSUR',W/2,Hh*.07);
+ const cw=W*.9/18,ch=Hh*.095,x0=W*.05,y0=Hh*.15,HI=['H','C','N','O','S','Cl'];let k=0;
+ for(let r=0;r<7;r++)for(let c=0;c<18;c++){const ex=r===0?(c===0||c===17):r<3?(c<2||c>=12):true;if(!ex)continue;
+  const col=c===0?(r===0?'#fde68a':'#fca5a5'):c===1?'#fdba74':c<12?'#bfdbfe':c===17?'#ddd6fe':c===16?'#fde047':(c>=13&&r<4)?'#bbf7d0':'#d1d5db';
+  const sy=k<SYM.length?SYM[k]:'';k++;const hi=HI.includes(sy);g.fillStyle=col;g.fillRect(x0+c*cw+1,y0+r*ch+1,cw-2,ch-2);
+  if(hi){g.strokeStyle='#c2410c';g.lineWidth=4;g.strokeRect(x0+c*cw+2,y0+r*ch+2,cw-4,ch-4);}
+  g.fillStyle='#17201e';g.font=(hi?'bold ':'')+Math.round(ch*.42)+'px sans-serif';g.fillText(sy,x0+c*cw+cw/2,y0+r*ch+ch/2);}
+ g.fillStyle='#c2410c';g.font='bold '+Math.round(Hh*.048)+'px sans-serif';g.fillText('Thiamin HCl (C₁₂H₁₇ClN₄OS·HCl): H, C, N, O, S, Cl',W/2,Hh*.91,W*.94);};
+const dCork=(g,W,Hh)=>{g.fillStyle='#c89a62';g.fillRect(0,0,W,Hh);for(let i=0;i<260;i++){g.fillStyle=i%2?'rgba(120,80,40,.25)':'rgba(255,235,200,.2)';g.fillRect(Math.random()*W,Math.random()*Hh,3,3);}
+ [['JADWAL',.08,.08,.38,.4,'#fff'],['LOG BOOK',.54,.1,.38,.32,'#fef9c3'],['IK-UV-01',.1,.55,.4,.36,'#dbeafe'],['K3 LAB',.56,.52,.34,.38,'#fff']].forEach(p=>{g.fillStyle=p[5];g.fillRect(W*p[1],Hh*p[2],W*p[3],Hh*p[4]);g.fillStyle='#dc2626';g.beginPath();g.arc(W*(p[1]+p[3]/2),Hh*p[2]+8,6,0,7);g.fill();g.fillStyle='#1f2926';g.font='bold '+Math.round(Hh*.07)+'px sans-serif';g.textAlign='center';g.fillText(p[0],W*(p[1]+p[3]/2),Hh*(p[2]+.09));for(let l=0;l<3;l++)g.fillRect(W*(p[1]+.04),Hh*(p[2]+.16+l*.06),W*p[3]*.8,3);});};
+function signTex(i){return(g,W,Hh)=>{g.fillStyle='#fff';g.fillRect(0,0,W,Hh);g.textAlign='center';g.textBaseline='middle';const cx=W/2,cy=Hh*.4,R=W*.38,s=W/264;
+ if(i===0){g.fillStyle='#1d4ed8';g.beginPath();g.arc(cx,cy,R,0,7);g.fill();g.fillStyle='#fff';g.font='bold '+Math.round(54*s)+'px sans-serif';g.fillText('APD',cx,cy-6*s);g.font='bold '+Math.round(20*s)+'px sans-serif';g.fillText('WAJIB',cx,cy+34*s);}
+ else if(i===1){g.fillStyle='#facc15';g.strokeStyle='#111';g.lineWidth=10*s;g.beginPath();g.moveTo(cx,cy-R);g.lineTo(cx+R*1.05,cy+R*.8);g.lineTo(cx-R*1.05,cy+R*.8);g.closePath();g.fill();g.stroke();g.fillStyle='#111';g.font='bold '+Math.round(50*s)+'px sans-serif';g.fillText('UV',cx,cy+R*.3);}
+ else if(i===2){g.save();g.translate(cx,cy);g.rotate(Math.PI/4);g.strokeStyle='#dc2626';g.lineWidth=14*s;g.strokeRect(-R*.62,-R*.62,R*1.24,R*1.24);g.restore();g.fillStyle='#111';g.font='bold '+Math.round(34*s)+'px sans-serif';g.fillText('HCl',cx,cy-8*s);g.font='bold '+Math.round(17*s)+'px sans-serif';g.fillText('KOROSIF',cx,cy+26*s);}
+ else if(i===3){g.strokeStyle='#dc2626';g.lineWidth=16*s;g.beginPath();g.arc(cx,cy,R*.95,0,7);g.stroke();g.beginPath();g.moveTo(cx-R*.67,cy-R*.67);g.lineTo(cx+R*.67,cy+R*.67);g.stroke();g.fillStyle='#111';g.font='bold '+Math.round(24*s)+'px sans-serif';g.fillText('MAKAN',cx,cy-12*s);g.fillText('MINUM',cx,cy+14*s);}
+ else if(i===4){g.fillStyle='#15803d';rr(g,cx-R,cy-R*.8,R*2,R*1.6,14*s);g.fill();g.fillStyle='#fff';g.font='bold '+Math.round(36*s)+'px sans-serif';g.fillText('EYE',cx,cy-14*s);g.fillText('WASH',cx,cy+24*s);}
+ else{g.fillStyle='#1d4ed8';g.beginPath();g.arc(cx,cy,R,0,7);g.fill();g.fillStyle='#fff';g.font='bold '+Math.round(24*s)+'px sans-serif';g.fillText('KACA',cx,cy-12*s);g.fillText('MATA',cx,cy+16*s);}
+ g.fillStyle='#111';g.font='bold '+Math.round(19*s)+'px sans-serif';g.fillText(['JAS LAB · SARUNG TANGAN','BAHAYA RADIASI UV','BAHAN KOROSIF','DILARANG MAKAN / MINUM','PENCUCI MATA DARURAT','KACAMATA PELINDUNG'][i],cx,Hh*.9,W*.94);};}
+// susunan dinding belakang
+plate('LABORATORIUM INSTRUMENTASI · ANALISIS KIMIA',12,.8,0,9.2,WZ+.03,'#17201e','#fdba74');plate('Politeknik AKA Bogor · Program Studi D3 Analisis Kimia',8,.4,0,8.45,WZ+.03,null,'#4b5651');
+poster(3.6,2.4,-8.1,6.1,WZ,0,'ptab',dPT);poster(7,3.2,-2.6,6.1,WZ,0,'board',dBoard,0x8a949a);poster(3.8,2.6,3.4,6.1,WZ,0,'spec',dSpec);poster(2.8,2.6,6.95,6.1,WZ,0,'bl',dBL);
+poster(1.6,1.8,9.5,4.7,WZ,0,null,dCork,0x6b4a2a);
+[-7.4,-5.0,-2.6,-.2,2.2,4.6].forEach((x,i)=>poster(1.2,1.4,x,3.8,WZ,0,'k3',signTex(i),0xffffff));
+// jam dinding (jarum bergerak mengikuti waktu sebenarnya)
+const clockH=new THREE.Group(),clockM=new THREE.Group(),clockS=new THREE.Group();
+{const g=new THREE.Group();g.position.set(9.5,7.55,WZ+.04);root.add(g);
+ g.add(new THREE.Mesh(new THREE.CircleGeometry(.62,48),new THREE.MeshBasicMaterial({map:tx(canv(256,256,c=>{c.fillStyle='#fff';c.beginPath();c.arc(128,128,124,0,7);c.fill();c.strokeStyle='#17201e';c.lineWidth=10;c.stroke();for(let i=0;i<12;i++){const a=i*Math.PI/6;c.lineWidth=i%3?4:8;c.beginPath();c.moveTo(128+Math.sin(a)*100,128-Math.cos(a)*100);c.lineTo(128+Math.sin(a)*114,128-Math.cos(a)*114);c.stroke();}}))})));
+ [[clockH,.3,.045,'#17201e'],[clockM,.46,.035,'#17201e'],[clockS,.5,.015,'#dc2626']].forEach(([p,l,w,c],i)=>{p.position.z=.01+i*.004;const h=new THREE.Mesh(new THREE.PlaneGeometry(w,l),new THREE.MeshBasicMaterial({color:c}));h.position.y=l/2-.04;p.add(h);g.add(p);});}
+// jendela di dinding kiri
+{const g=new THREE.Group();g.position.set(-WX,5.1,4.4);g.rotation.y=H;root.add(g);
+ add(B(4.4,3.6,.1),M(0xf5f5f0,.5,0),0,0,.05,null,{parent:g});
+ const sky=new THREE.Mesh(new THREE.PlaneGeometry(4,3.2),new THREE.MeshBasicMaterial({map:tx(canv(512,410,(c,W,Hh)=>{const gr=c.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#7cc4ff');gr.addColorStop(1,'#e2f2ff');c.fillStyle=gr;c.fillRect(0,0,W,Hh);c.fillStyle='rgba(255,255,255,.88)';[[90,90,50],[150,80,40],[330,140,55],[390,125,38]].forEach(q=>{c.beginPath();c.arc(q[0],q[1],q[2],0,7);c.fill();});c.fillStyle='#8fa6a1';[[0,300,80,120],[90,260,70,160],[190,320,90,100],[300,280,60,140],[380,310,132,110]].forEach(q=>c.fillRect(q[0],q[1],q[2],q[3]));}))}));sky.position.z=.11;g.add(sky);
+ add(B(.08,3.2,.04),M(0xf5f5f0,.5,0),0,0,.14,null,{parent:g});add(B(4,.08,.04),M(0xf5f5f0,.5,0),0,0,.14,null,{parent:g});
+ for(let i=0;i<7;i++)add(B(4,.07,.03),M(0xe6e4d8,.6,0),0,1.45-i*.115,.17,null,{parent:g});
+ add(B(4.7,.1,.34),M(0xf5f5f0,.5,0),0,-1.85,.2,null,{parent:g});}
+// rak reagen di dinding kiri
+{const g=new THREE.Group();g.position.set(-WX,0,-.6);g.rotation.y=H;root.add(g);const cols=[0x8a4b12,0xdbe8e6,0xf4f4f4,0x8a4b12,0xdbe8e6,0xf4f4f4,0x8a4b12,0xdbe8e6,0xf4f4f4],nm=['HCl','NaOH','Etanol','H₂SO₄','Aquades','HNO₃','KCl','Metanol','Thiamin'];
+ [4.1,5.9].forEach((sy,r)=>{add(B(5.2,.08,.7),M(0xd9d3c0,.6,.1),0,sy,.35,'reagen',{parent:g});[-2.4,2.4].forEach(x=>add(B(.08,.4,.6),mat.metal,x,sy-.22,.33,'reagen',{parent:g}));
+  for(let i=0;i<9;i++){const rad=.17+.03*(i%3),h=.5+.18*((i+r)%2),x=-2.2+i*.55;add(C(rad,h,20),M(cols[i],.2,.05,{transparent:cols[i]===0xdbe8e6,opacity:cols[i]===0xdbe8e6?.7:1}),x,sy+.04+h/2,.4,'reagen',{parent:g});add(C(rad*.55,.1,14),M(i%2?0x1d4fa8:0x111111,.4,.1),x,sy+.04+h+.05,.4,'reagen',{parent:g});plate(nm[(i+r*3)%9],.3,.11,x,sy+.04+h*.45,.4+rad+.002,'rgba(255,255,255,.92)','#17201e',g);}});}
+// pintu di dinding kanan + APAR
+{const g=new THREE.Group();g.position.set(WX,0,7.6);g.rotation.y=-H;root.add(g);add(B(2.7,6.5,.08),M(0xf5f5f0,.5,0),0,0,.04,null,{parent:g});add(B(2.4,6.2,.1),M(0xb8c2bc,.55,.1),0,0,.1,null,{parent:g});add(B(.8,1.8,.02),mat.glass,0,1.2,.17,null,{parent:g});add(B(.08,.4,.08),mat.metal,.9,-.2,.2,null,{parent:g});plate('KELUAR',1.2,.4,0,3.55,.06,'#15803d','#fff',g);}
+{const g=new THREE.Group();g.position.set(WX,0,1.8);g.rotation.y=-H;root.add(g);
+ add(C(.2,1.2,24),M(0xc81e1e,.35,.2),0,2.0,.3,'apar',{parent:g});add(B(.2,.16,.22),mat.metal,0,2.7,.3,'apar',{parent:g});add(B(.55,.06,.1),mat.dark,0,2.2,.26,'apar',{parent:g});
+ add(new THREE.TorusGeometry(.14,.025,8,20,Math.PI*1.4),mat.dark,.18,2.45,.3,'apar',{parent:g});plate('APAR',.7,.7,0,3.45,.05,'#c81e1e','#fff',g);}
+// lemari asam di atas meja
+{const g=new THREE.Group();g.position.set(8.4,0,-2.4);root.add(g);const P={parent:g},hm=M(0xe9ece9,.45,.15);
+ add(B(2.8,4.3,.08),hm,0,2.15,-1.12,'hood',P);[-1.4,1.4].forEach(s=>add(B(.1,4.3,2.3),hm,s,2.15,0,'hood',P));add(B(2.95,.55,2.45),hm,0,4.5,0,'hood',P);
+ add(B(2.7,.05,2.2),M(0x8d979b,.4,.5),0,.03,0,'hood',P);add(B(2.6,2.7,.04),mat.glass,0,2.3,1.08,'hood',P);add(B(2.7,.12,.08),mat.metal,0,3.7,1.1,'hood',P);add(B(.7,.07,.1),mat.metal,0,.95,1.12,'hood',P);
+ add(B(2.3,.04,.1),new THREE.MeshBasicMaterial({color:0xfffbe6}),0,4.15,.4,'hood',P);
+ add(C(.2,.7,20),M(0x8a4b12,.3,.1,{transparent:true,opacity:.85}),-.7,.4,-.5,'hood',P);add(C(.22,.6,20),mat.glass,.5,.35,-.4,'hood',P);
+ add(C(.4,5.8,24),mat.metal,0,7.3,-.6,'hood',P);plate('LEMARI ASAM',2.2,.34,0,4.5,1.24,'#17201e','#fdba74',g);}
+// wastafel + keran
+add(B(2.0,.04,1.4),mat.metal,-8.3,.02,-1.5);add(B(1.7,.045,1.1),M(0x2b3236,.4,.4),-8.3,.045,-1.5);add(C(.08,.1,16),mat.metal,-8.3,.09,-2.15);add(C(.035,.7,12),mat.metal,-8.3,.45,-2.15);
+{const a=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,10,24,Math.PI),mat.metal.clone());a.position.set(-8.3,.8,-1.93);a.rotation.y=H;root.add(a);}
+// bangku & tempat limbah B3
+add(C(.05,2.2,12),mat.metal,1.2,-2.12,5.4);add(C(.5,.14,28),M(0x20262a,.6,.1),1.2,-.98,5.4);add(new THREE.TorusGeometry(.32,.03,8,24),mat.metal,1.2,-3.1,5.4,null,{rx:H});
+add(C(.5,1.1,28),M(0xc2410c,.5,.1),-8.4,-2.67,5.2);plate('LIMBAH B3',.7,.2,-8.4,-2.5,5.72,'#fff','#c2410c');
+/* --- Instrumen UV-Vis (bodi) --- */
+const BX=.2,BWd=5.2,BD=3.0,TOP=1.8,T=.06;
+const bandM=M(0x2f4f78,.45,.25),panM=M(0xdadedb,.42,.1);
+add(RBF(BWd+.1,BD+.1,.2,.06),mat.dark,BX,.1,0,'body');
+add(B(T,TOP,BD),mat.body,BX-BWd/2+T/2,TOP/2,0,'body',{shell:1});
+add(B(T,TOP,BD),mat.body,BX+BWd/2-T/2,TOP/2,0,'body',{shell:1});
+add(B(BWd,TOP,T),mat.body,BX,TOP/2,-BD/2+T/2,'body',{shell:1});
+add(B(BWd,TOP,T),mat.body,BX,TOP/2,BD/2-T/2,'body',{shell:1});
+add(B(3.85,T,BD),mat.body,-.475,TOP,0,'body',{shell:1});
+add(B(1.35,T,1.0),mat.body,2.125,TOP,1.0,'body',{shell:1});add(B(1.35,T,.2),mat.body,2.125,TOP,-1.4,'body',{shell:1});
+// sudut membulat + tepi atas membulat
+[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>add(C(.1,TOP-.1,20),mat.body,BX+a*(BWd/2-.04),TOP/2+.04,b*(BD/2-.04),'body',{shell:1}));
+[-1,1].forEach(s=>{add(C(.055,BWd-.2,16),mat.body,BX,TOP,s*(BD/2-.03),'body',{rz:H,shell:1});add(C(.055,BD-.2,16),mat.body,BX+s*(BWd/2-.03),TOP,0,'body',{rx:H,shell:1});});
+// penutup optik yang menonjol + slot ventilasi
+add(RBF(2.9,1.9,.1,.08),mat.body,-.55,TOP+.07,-.2,'body',{shell:1});
+for(let i=0;i<9;i++)add(B(1.6,.012,.05),mat.dark,-.55,TOP+.125,-.9+i*.16,'body',{shell:1});
+for(let i=0;i<10;i++){add(B(.02,.5,.045),mat.dark,BX+BWd/2+.005,.85,-1.0+i*.22,'body');add(B(.02,.5,.045),mat.dark,BX-BWd/2-.005,.85,-1.0+i*.22,'body');}
+// panel depan
+add(RB(BWd-.4,1.3,.05,.05),panM,BX,.88,BD/2+.01,'body');
+add(B(BWd-.3,.07,.03),bandM,BX,1.6,BD/2+.045,'body');add(B(BWd-.3,.035,.03),bandM,BX,.19,BD/2+.02,'body');
+plate('UV-1800 · DOUBLE BEAM',1.9,.2,1.5,1.28,BD/2+.04,null,'#1d2a5c');plate('UV-Vis Spectrophotometer · 190–1100 nm',2.1,.12,1.5,1.06,BD/2+.04,null,'#555');plate('Model edukasi · Politeknik AKA Bogor',1.9,.1,1.5,.28,BD/2+.04,null,'#6b7280');
+// LCD + bezel
+add(RB(1.62,.82,.06,.06),mat.dark,-.8,1.1,BD/2+.045,'display');
+const lcd=document.createElement('canvas');lcd.width=512;lcd.height=256;const lx=lcd.getContext('2d'),lcdT=tx(lcd);
+add(new THREE.PlaneGeometry(1.34,.56),new THREE.MeshBasicMaterial({map:lcdT}),-.8,1.1,BD/2+.082,'display');
+// tombol power + tombol fungsi + LED status
+const pwrBtn=add(C(.09,.06),M(0x1fe08a,.45,0,{emissive:0x0a8a4a,emissiveIntensity:1}),-1.95,.6,BD/2+.06,'power',{rx:H});
+add(new THREE.TorusGeometry(.115,.014,10,32),mat.metal,-1.95,.6,BD/2+.045,'power');
+const instLed=add(new THREE.SphereGeometry(.025,12,12),new THREE.MeshBasicMaterial({color:0x3a1a1a}),-1.95,.84,BD/2+.05,'power');
+plate('POWER',.4,.09,-1.95,.43,BD/2+.04,null,'#333');
+['START/STOP','AUTO ZERO','GOTO λ'].forEach((t,i)=>{add(RB(.34,.13,.05,.03),mat.grey,-1.0+i*.5,.55,BD/2+.05,'display');plate(t,.34,.07,-1.0+i*.5,.44,BD/2+.04,null,'#333');});
+const mkLed=(y,c,t)=>{const m=add(new THREE.SphereGeometry(.028,12,12),new THREE.MeshBasicMaterial({color:c}),.35,y,BD/2+.05,'display');plate(t,.5,.08,.72,y,BD/2+.04,null,'#444');return m;};
+const ledLamp=mkLed(1.36,0x3a1a1a,'LAMP'),ledRdy=mkLed(1.2,0x3a1a1a,'READY'),ledErr=mkLed(1.04,0x4a1a1a,'ERROR');
+// tutup kompartemen cuvet (berengsel di sisi belakang) + bingkai bukaan
+const lid=new THREE.Group();lid.position.set(2.125,TOP,-1.3);root.add(lid);
+const lidMesh=add(RBF(1.35,1.8,.1,.05),mat.body,0,.02,.9,'cuvComp',{parent:lid,shell:1});lidMesh.userData.lid=1;
+const lidH=add(RBF(.6,.16,.08,.04),mat.metal,0,.09,1.68,'cuvComp',{parent:lid});lidH.userData.lid=1;
+const lidIn=add(B(1.0,.012,1.35),M(0xbfc6c9,.5,.2),0,.075,.85,'cuvComp',{parent:lid});lidIn.userData.lid=1;
+add(C(.045,1.25,14),mat.metal,2.125,TOP+.03,-1.33,'cuvComp',{rz:H});
+add(B(1.35,.045,.04),mat.metal,2.125,TOP+.03,.52,'cuvComp');add(B(.04,.045,1.8),mat.metal,1.47,TOP+.03,-.4,'cuvComp');
+// panel belakang: port daya & USB
+add(RB(1.0,.55,.04,.03),mat.dark,BX+1.4,.75,-BD/2-.015,'body');add(RB(.5,.3,.04,.03),mat.dark,BX-1.0,.8,-BD/2-.015,'body');
+{const rp=plate('AC IN · USB · MAIN',1.0,.12,BX+1.4,1.1,-BD/2-.04,null,'#333');rp.rotation.y=Math.PI;}
+// kompartemen lampu
+add(B(.08,1.0,1.3),mat.dark,-2.32,.65,0,'lampD2');
+add(B(.7,.02,1.3),M(0x2a2f36,.6,.3),-1.95,.16,0,'lampD2');
+add(B(.7,1.0,1.3),mat.glass,-1.95,.65,0,'lampD2');
+add(C(.1,.5,24),mat.glass,-1.95,.75,-.38,'lampD2');add(C(.04,.3,16),M(0x5aa0ff,.3,.4),-1.95,.75,-.38,'lampD2');add(C(.12,.08,24),mat.metal,-1.95,.45,-.38,'lampD2');
+const d2Glow=add(new THREE.SphereGeometry(.09,16,16),new THREE.MeshBasicMaterial({color:0x7ab8ff,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}),-1.85,.9,-.38);
+add(new THREE.SphereGeometry(.14,24,16),mat.glass,-1.95,.85,.38,'lampW');add(C(.07,.3,16),mat.metal,-1.95,.55,.38,'lampW');
+add(new THREE.TorusGeometry(.04,.008,8,16),M(0xffcc66,.4,.5),-1.95,.87,.38,'lampW',{ry:H});
+const wGlow=add(new THREE.SphereGeometry(.12,16,16),new THREE.MeshBasicMaterial({color:0xffa84a,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}),-1.95,.87,.38);
+
+/* --- Sistem optik: Czerny-Turner + beam splitter --- */
+const MY=.9,V=(x,z)=>new THREE.Vector3(x,MY,z);
+const PL=V(-1.85,0),PM1=V(-1.4,0),PS1=V(-1.0,-.9),PMc=V(-.45,.1),PG=V(.1,-.9),PMf=V(.65,.1),PS2=V(1.05,-.9),PBS=V(1.35,-.9),PM3=V(1.35,-.1);
+const PCS=V(1.9,-.1),PCR=V(1.9,-.9),PDS=V(2.45,-.1),PDR=V(2.45,-.9);
+function faceAt(p,a,b,id,mt,w,h){const u=new THREE.Vector3().subVectors(p,a).setY(0).normalize(),v=new THREE.Vector3().subVectors(b,p).setY(0).normalize(),n=v.sub(u);
+ const me=add(B(.04,h||.34,w||.22),mt||mat.metal,p.x,p.y,p.z,id||'mono');me.rotation.y=Math.atan2(-n.z,n.x);return me;}
+faceAt(PM1,PL,PS1);faceAt(PMc,PS1,PG);faceAt(PG,PMc,PMf,'mono',M(0xd4a63a,.25,.8),.26,.3);faceAt(PMf,PG,PS2);
+faceAt(PBS,PS2,PM3,'bs',M(0x9fd8ff,.05,.3,{transparent:true,opacity:.55}),.3,.32);faceAt(PM3,PBS,PCS,'bs');
+add(C(.012,.12,12),mat.metal,PG.x,.72,PG.z,'mono');add(C(.05,.08,24),mat.dark,PG.x,.6,PG.z,'mono');
+[[PM1],[PMc],[PMf],[PM3]].forEach(([p])=>add(C(.03,.3,12),mat.dark,p.x,.62,p.z,'mono'));
+add(B(2.55,.02,1.4),M(0x2b3036,.5,.4),.15,.17,-.4,'mono');
+add(B(2.55,.6,1.4),mat.glass,.15,.5,-.4,'mono');
+[[-1,-.1],[1.35,.3]].forEach(()=>0);
+[[PS1,0],[PS2,0]].forEach(([p])=>[-1,1].forEach(s=>add(B(.1,.3,.014),mat.dark,p.x,MY,p.z+s*.04,'slit')));
+// cuvet + holder
+const holders=[PCS,PCR];
+add(B(1.35,.02,2.0),M(0x2a2f36,.6,.3),2.0,.16,-.55,'cuvComp');
+holders.forEach(p=>{add(B(.34,.58,.34),mat.dark,p.x,.45,p.z,'cuvComp');add(B(.2,.02,.2),mat.metal,p.x,.745,p.z,'cuvComp');});
+const CV=[];
+function makeCuvette(p,col){const g=new THREE.Group();g.position.set(p.x,0,p.z);root.add(g);
+ add(B(.13,.3,.13),mat.glass,0,.9,0,'cuvette',{parent:g});
+ const lq=add(B(.1,.22,.1),M(col,.1,0,{transparent:true,opacity:.8}),0,.87,0,'cuvette',{parent:g});
+ const F={g,mat:lq.material,col:new THREE.Color(col),goal:new THREE.Color(col)};CV.push(F);return F;}
+const cvS=makeCuvette(PCS,0xffe9a0),cvR=makeCuvette(PCR,0xeaf6ff);
+// detektor
+add(C(.14,.5,24),M(0x8e99a3,.35,.8),2.62,MY,-.1,'detector',{rz:H});add(C(.12,.03,24),M(0x6f8f6a,.35,.4),2.35,MY,-.1,'detector',{rz:H});
+add(B(.3,.22,.22),M(0x20262c,.5,.4),2.6,MY,-.9,'detector');add(B(.02,.14,.14),M(0x5a7fb0,.3,.5),2.44,MY,-.9,'detector');
+add(B(.5,.03,.9),M(0x1f5d3a,.55,.2),2.4,.2,-.5,'detector');
+// kabel USB ke CPU
+{const pts=[[2.8,.45,.5],[3.2,.04,.7],[4.2,.03,-.6],[5.6,.03,-1.3],[6.3,.35,-1.35]].map(p=>new THREE.Vector3(...p));
+ const me=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),60,.014,8),M(0x101215,.5,.2));me.castShadow=true;root.add(me);}
+add(B(.02,.12,.2),mat.dark,2.79,.45,.5,'body');
+
+/* --- UPS --- */
+add(B(1.2,.7,1.0),M(0x20262c,.5,.3),-4.7,.35,-.4,'ups');
+const upsBtn=add(C(.09,.05),M(0x1fe08a,.45,0,{emissive:0x0a8a4a,emissiveIntensity:1}),-4.35,.38,.12,'ups',{rx:H});upsBtn.userData.upsBtn=1;
+const upsLed=add(new THREE.SphereGeometry(.025,12,12),new THREE.MeshBasicMaterial({color:0x3a1a1a}),-4.35,.55,.1,'ups');
+plate('UPS · ON/OFF',.8,.14,-4.9,.4,.105,'#151b20','#e8eafc');
+
+/* --- Labu takar & botol --- */
+const FL=[];
+function lcol(c){return new THREE.Color().lerpColors(new THREE.Color(0xeaf6ff),new THREE.Color(0xffd21f),c<=0?0:Math.min(1,.2+c/25*.8));}
+function makeFlask(x,z,s,id,fill,col,label){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);root.add(g);
+ const gp=[[0,0],[.13,0],[.19,.03],[.225,.12],[.235,.3],[.2,.46],[.12,.57],[.055,.66],[.055,1.0],[.07,1.04]];
+ add(new THREE.LatheGeometry(gp.map(q=>new THREE.Vector2(q[0],q[1])),36),mat.glass,0,0,0,id,{parent:g});
+ const lp=[[0,.004],[.125,.004],[.182,.034],[.215,.12],[.224,.3],[.19,.46],[0,.46]];
+ const liq=add(new THREE.LatheGeometry(lp.map(q=>new THREE.Vector2(q[0],q[1])),36),M(col,.15,0,{transparent:true,opacity:.82,side:THREE.DoubleSide}),0,0,0,id,{parent:g});
+ add(new THREE.TorusGeometry(.058,.004,8,28),M(0x1d4fa8,.4,0),0,.85,0,id,{parent:g,rx:H});add(C(.062,.07,16),M(0x2a63c9,.35,0),0,1.07,0,id,{parent:g});
+ if(label)plate(label,.42,.12,0,.22,.238,'rgba(255,255,255,.88)','#1d4fa8',g);
+ const F={liq,mat:liq.material,cur:fill,goal:fill,colGoal:new THREE.Color(col)};liq.scale.y=Math.max(.001,fill);liq.visible=fill>.01;FL.push(F);return F;}
+function makeBeaker(x,z,s,id,fill,col,label){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);root.add(g);
+ const wl=[[0,0],[.26,0],[.28,.02],[.3,.5],[.31,.56]];
+ add(new THREE.LatheGeometry(wl.map(q=>new THREE.Vector2(q[0],q[1])),36),M(0xf4f6f6,.35,0,{transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}),0,0,0,id,{parent:g});
+ add(new THREE.TorusGeometry(.17,.032,10,24,Math.PI),M(0xe8eaea,.4,0),.3,.3,0,id,{parent:g,rz:-H});
+ add(new THREE.TorusGeometry(.31,.012,8,36),M(0xdfe3e3,.4,0),0,.56,0,id,{parent:g,rx:H});
+ const lp=[[0,.01],[.255,.01],[.285,.03],[.296,.4],[0,.4]];
+ const liq=add(new THREE.LatheGeometry(lp.map(q=>new THREE.Vector2(q[0],q[1])),36),M(col,.15,0,{transparent:true,opacity:.82,side:THREE.DoubleSide}),0,0,0,id,{parent:g});
+ if(label)plate(label,.5,.14,0,.3,.305,'rgba(255,255,255,.9)','#1d4fa8',g);
+ const F={liq,mat:liq.material,cur:fill,goal:fill,colGoal:new THREE.Color(col)};liq.scale.y=Math.max(.001,fill);liq.visible=fill>.01;FL.push(F);return F;}
+const fPre=[0,1,2,3,4].map(i=>makeFlask(-7.4+i*.8,2.5,.85,'flask',.9,lcol(14).getHex(),'Presisi '+(i+1)));
+const fAkur=makeFlask(-3.2,2.5,.85,'akur',.9,lcol(17).getHex(),'Akurasi');
+const fHcl=makeBeaker(1.4,2.5,1.0,'hcl',.85,0xeaf6ff,'HCl 1:60');
+const fStd=[0,5,10,15,20,25].map((c,i)=>makeFlask(-2.1+i*.55,2.5,.62,'std',.9,lcol(c).getHex(),String(c)));
+// rak cuvet cadangan
+add(B(1.3,.1,.5),mat.dark,2.8,.05,2.5,'cuvette');for(let i=0;i<4;i++){add(B(.12,.3,.12),mat.glass,2.35+i*.3,.25,2.5,'cuvette');}
+// buku IK
+{const g=new THREE.Group();g.position.set(-9.0,.07,2.3);g.rotation.y=.35;root.add(g);
+ add(B(.8,.12,1.1),M(0x1d3a7a,.5,.1),0,0,0,'ik',{parent:g});add(B(.74,.08,1.04),M(0xf3efe2,.85,0),.02,0,0,'ik',{parent:g});
+ const k=document.createElement('canvas');k.width=416;k.height=592;const q=k.getContext('2d');q.fillStyle='#1d3a7a';q.fillRect(0,0,416,592);q.fillStyle='#fff';q.fillRect(28,40,360,300);q.fillStyle='#111';q.textAlign='center';q.textBaseline='middle';
+ [['INSTRUKSI KERJA',80,34],['PENGGUNAAN SPEKTROFOTOMETER',130,22],['UV-Vis DOUBLE BEAM',170,26],['PENETAPAN THIAMIN',230,26],['Politeknik AKA Bogor',280,20]].forEach(l=>{q.font='bold '+l[2]+'px sans-serif';q.fillText(l[0],208,l[1],340);});
+ q.fillStyle='#cfe0ff';q.font='bold 24px sans-serif';q.fillText('BUKU IK',208,420);q.font='18px sans-serif';q.fillText('klik untuk membaca',208,455);
+ const p=add(new THREE.PlaneGeometry(.7,1.0),new THREE.MeshBasicMaterial({map:tx(k)}),0,.0605,0,'ik',{parent:g,rx:-H});}
+
+/* --- PC: monitor + keyboard + CPU --- */
+const SS=2,sc=document.createElement('canvas');sc.width=520*SS;sc.height=320*SS;const sx=sc.getContext('2d'),stex=tx(sc);
+let upsOn=false,instOn=false,cpuOn=false,monOn=false,pcBoot=0;
+const mon=new THREE.Group();mon.position.set(5.0,0,.3);mon.rotation.y=-.3;root.add(mon);
+const bz=new THREE.MeshPhysicalMaterial({color:0x07080a,roughness:.28,metalness:.35,clearcoat:.7});
+add(B(.5,.03,.4),M(0x101216,.35,.6),0,.015,0,'pc',{parent:mon});add(B(.1,.6,.04),M(0x101216,.35,.6),0,.33,-.08,'pc',{parent:mon});
+add(B(1.5,.98,.07),bz,0,1.1,0,'pc',{parent:mon});
+const scrMesh=add(new THREE.PlaneGeometry(1.4,.86),new THREE.MeshBasicMaterial({map:stex,toneMapped:false}),0,1.12,.037,'pc',{parent:mon});scrMesh.userData.screen=1;
+const monBtn=add(C(.022,.014,24),M(0x30343b,.35,.6),.66,.65,.04,'pc',{parent:mon,rx:H});monBtn.userData.monBtn=1;
+const monLed=add(new THREE.SphereGeometry(.007,12,12),new THREE.MeshBasicMaterial({color:0x3a1a1a}),.6,.65,.042,'pc',{parent:mon});monLed.userData.monBtn=1;
+add(B(1.2,.03,.4),M(0x17191c,.55,.1),0,.03,.95,'pc',{parent:mon});
+const cpu=new THREE.Group();cpu.position.set(6.5,0,-.8);cpu.rotation.y=-.3;root.add(cpu);
+add(B(.55,1.1,.85),M(0x0d0e11,.42,.45),0,.55,0,'pc',{parent:cpu});add(B(.012,.9,.7),M(0x0a0c12,.04,.6,{transparent:true,opacity:.3}),-.28,.55,0,'pc',{parent:cpu});
+const cpuBtn=add(C(.03,.016,24),M(0x2b2f35,.35,.6),.12,.95,.43,'pc',{parent:cpu,rx:H});cpuBtn.userData.cpuBtn=1;
+const cpuLed=add(new THREE.SphereGeometry(.01,12,12),new THREE.MeshBasicMaterial({color:0x3a1a1a}),.2,.95,.43,'pc',{parent:cpu});cpuLed.userData.cpuBtn=1;
+const FANS=[];[.75,.45].forEach(y=>{const f=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,8,32),new THREE.MeshBasicMaterial({color:0x2dd4bf}));f.position.set(-.29,y,.0);f.rotation.y=H;cpu.add(f);FANS.push(f);});
+
+/* ===== Layar PC (UVProbe) ===== */
+const scr={mode:'off',k:0,scanP:0,curveN:0,line:false,warm:0};
+const meanA=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const DEF=()=>({std:[[0,.010],[5,.161],[10,.287],[15,.466],[20,.580],[25,.769]],smp:[.371,.374,.368,.372,.369],sp:.444,mtab:.3060,mw:.3050,Vf:200,Vp:5,Vd:100,label:50,cs:100,vs:2.5,vt:100});
+let cal=DEF();
+function fit(){const P=cal.std.filter(q=>isFinite(q[0])&&isFinite(q[1])),n=P.length;if(n<2)return null;const mx=meanA(P.map(q=>q[0])),my=meanA(P.map(q=>q[1]));let sxx=0,sxy=0,syy=0;P.forEach(([x,y])=>{sxx+=(x-mx)**2;sxy+=(x-mx)*(y-my);syy+=(y-my)**2;});
+ if(!sxx)return null;const m=sxy/sxx,b=my-m*mx,r=syy?sxy/Math.sqrt(sxx*syy):1;return{m,b,r,r2:r*r,P,n};}
+function calc(){const f=fit();if(!f||!f.m)return null;const FP=cal.Vd/cal.Vp;
+ const rows=cal.smp.filter(isFinite).map(a=>{const c=(a-f.b)/f.m,cf=c*FP,mgF=cf*cal.Vf/1000;return{a,c,cf,mgT:mgF*cal.mtab/cal.mw,mgkg:mgF/(cal.mw/1000)};});if(!rows.length)return null;
+ rows.forEach(q=>q.pct=q.mgT/cal.label*100);const v=rows.map(q=>q.mgT),km=meanA(v),sd=v.length>1?Math.sqrt(v.reduce((t,x)=>t+(x-km)**2,0)/(v.length-1)):NaN;
+ const C1=meanA(rows.map(q=>q.c)),cSp=(cal.sp-f.b)/f.m,C2=cal.cs*cal.vs/cal.vt,rec=(cSp-C1)/C2*100;
+ return{f,FP,rows,km,sd,rsd:sd/km*100,kgm:meanA(rows.map(q=>q.mgkg)),pct:km/cal.label*100,C1,cSp,C2,rec};}
+const nv=(x,d)=>isFinite(x)?x.toFixed(d):'–';
+const specA=l=>.47*Math.exp(-((l-246)**2)/(2*10*10))+.09*Math.exp(-((l-270)**2)/(2*14*14))+.3*Math.exp(-((l-212)**2)/(2*6*6))+.012;
+const LISTM=['Std 0','Std 5','Std 10','Std 15','Std 20','Std 25','Presisi 1','Presisi 2','Presisi 3','Presisi 4','Presisi 5','Akurasi'];
+function measA(i){const f=fit();if(!f)return 0;if(i<6)return cal.std[i]?cal.std[i][1]:0;if(i<11)return cal.smp[i-6]||0;return cal.sp;}
+let wl=246,Aread=0,lampOnSim=false;
+const pcReady=()=>cpuOn&&monOn&&pcBoot<=0;
+function winLogo(g,cx,cy,s,col){g.save();g.translate(cx,cy);g.scale(s,s);g.fillStyle=col;[[[-46,-34],[-3,-40],[-3,-4],[-46,-3]],[[3,-41],[48,-48],[48,-4],[3,-4]],[[-46,3],[-3,3],[-3,38],[-46,32]],[[3,3],[48,3],[48,44],[3,38]]].forEach(q=>{g.beginPath();q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fill();});g.restore();}
+function fitPts(P){const n=P.length;if(n<2)return null;const mx=meanA(P.map(q=>q[0])),my=meanA(P.map(q=>q[1]));let sxx=0,sxy=0,syy=0;P.forEach(q=>{sxx+=(q[0]-mx)**2;sxy+=(q[0]-mx)*(q[1]-my);syy+=(q[1]-my)**2;});if(!sxx)return null;const m=sxy/sxx,b=my-m*mx,r=syy?sxy/Math.sqrt(syy*sxx):1;return{m,b,r,r2:r*r,P,n};}
+function drawPC(){const g=sx;g.setTransform(SS,0,0,SS,0,0);g.textAlign='left';g.textBaseline='alphabetic';
+ if(!(cpuOn&&monOn)){g.fillStyle='#000';g.fillRect(0,0,520,320);if(monOn&&!cpuOn){g.fillStyle='#8a929a';g.font='bold 22px monospace';g.textAlign='center';g.fillText('No Signal',260,160);}stex.needsUpdate=true;return;}
+ if(pcBoot>0){g.fillStyle='#02060f';g.fillRect(0,0,520,320);winLogo(g,260,112,1.1,'#3b9cff');g.fillStyle='#cfe6ff';g.font='13px sans-serif';g.textAlign='center';g.fillText('Starting Windows...',260,214);
+  g.strokeStyle='#3b6fd0';g.strokeRect(190.5,230.5,140,5);g.fillStyle='#5aa9ff';g.fillRect(191,231,139*(1-pcBoot/3),4);stex.needsUpdate=true;return;}
+ let b=g.createLinearGradient(0,0,520,320);b.addColorStop(0,'#030a1c');b.addColorStop(.5,'#0b2f78');b.addColorStop(1,'#040a1a');g.fillStyle=b;g.fillRect(0,0,520,320);
+ g.fillStyle='rgba(6,10,22,.94)';g.fillRect(0,296,520,24);winLogo(g,12,308,.11,'#4aa3ff');g.fillStyle='#cfd8e6';g.font='8px sans-serif';g.fillText('UVProbe',34,311);
+ if(scr.mode==='off'||scr.mode==='desk'){[['UVProbe','#2dd4bf'],['Laporan','#e8b04a'],['Excel','#22a55a']].forEach((ic,i)=>{const y=12+i*40;g.fillStyle=ic[1];g.fillRect(12,y,22,22);g.fillStyle='#fff';g.font='8px sans-serif';g.fillText(ic[0],10,y+32);});
+  g.fillStyle='#e6f6f4';g.font='bold 14px sans-serif';g.textAlign='center';g.fillText('Desktop siap — layar dapat diklik untuk membuka Perhitungan',260,150);g.textAlign='left';stex.needsUpdate=true;return;}
+ g.fillStyle='rgba(4,20,26,.97)';g.fillRect(10,8,500,282);g.strokeStyle='#2dd4bf';g.strokeRect(10.5,8.5,500,282);g.fillStyle='#0f766e';g.fillRect(11,9,499,16);g.fillStyle='#fff';g.font='bold 10px sans-serif';g.fillText('UVProbe — UV-1800 · Double Beam',17,21);
+ const f=fit();
+ if(scr.mode==='init'){const w=Math.min(1,scr.warm),L=[[0,'Starting UVProbe ...'],[.1,'Searching instrument on USB port ... found UV-1800'],[.22,'Connecting to UV-1800 ... OK'],[.34,'Instrument self-check (motor, filter, detector) ... OK'],[.46,'Lamp D2 / W warm-up in progress ...'],[.9,'Wavelength calibration ... OK'],[.97,'Instrument ready.']];
+  g.font='11px monospace';let y=48;L.forEach((r,i)=>{if(w>=r[0]){g.fillStyle=i===L.length-1?'#34d399':'#9bd7e3';g.fillText(r[1],24,y);y+=18;}});
+  const wf=Math.max(0,Math.min(1,(w-.46)/.44));g.strokeStyle='#2dd4bf';g.strokeRect(24.5,190.5,300,14);g.fillStyle=wf>=1?'#34d399':'#fbbf24';g.fillRect(25,191,299*wf,13);
+  g.fillStyle='#e6f6f4';g.font='bold 11px monospace';g.fillText('Lamp warm-up: '+Math.round(wf*100)+' %  (waktu simulasi dipercepat)',24,224);
+  g.fillStyle='#9bd7e3';g.font='10px monospace';g.fillText('D2 energy',24,246);g.fillRect(90,239,Math.round(160*Math.min(1,w*1.1)),8);g.fillText('W  energy',24,262);g.fillRect(90,255,Math.round(160*Math.min(1,w*.9)),8);}
+ else if(scr.mode==='scan'){const x0=56,y0=66,w=430,h=168,l0=210,l1=300,ym=.6,cur=300-scr.scanP*(300-210);
+  g.strokeStyle='#1d4a58';g.strokeRect(x0,y0,w,h);g.fillStyle='#7f9aa8';g.font='9px monospace';g.textAlign='right';for(let i=0;i<=4;i++){const y=y0+h-h*i/4;g.beginPath();g.moveTo(x0,y);g.lineTo(x0+w,y);g.stroke();g.fillText((ym*i/4).toFixed(2),x0-4,y+3);}
+  g.textAlign='center';for(let l=210;l<=300;l+=15)g.fillText(String(l),x0+(l-l0)/(l1-l0)*w,y0+h+12);g.fillText('λ (nm)',x0+w/2,y0+h+24);g.textAlign='left';g.fillText('Abs',20,y0+8);
+  g.fillStyle='#d6e6ee';g.font='bold 11px monospace';g.fillText('Spectrum scan · standar 15 mg/L · 300 → 210 nm',x0,y0-30);
+  g.fillStyle='#2dd4bf';g.font='bold 11px monospace';g.fillText('λ = '+cur.toFixed(1)+' nm',x0,y0-14);g.fillStyle='#fbbf24';g.fillText('Abs = '+specA(cur).toFixed(3),x0+110,y0-14);g.fillStyle='#9bd7e3';g.fillText('Progres '+Math.round(scr.scanP*100)+' %',x0+230,y0-14);
+  g.strokeStyle='#2dd4bf';g.lineWidth=1.8;g.beginPath();let st=false;for(let l=300;l>=cur-.01;l-=.5){const X=x0+(l-l0)/(l1-l0)*w,Y=y0+h-Math.min(1,specA(l)/ym)*h;st?g.lineTo(X,Y):g.moveTo(X,Y);st=true;}g.stroke();g.lineWidth=1;
+  if(scr.scanP>=1){const X=x0+(246-l0)/(l1-l0)*w,Y=y0+h-specA(246)/ym*h;g.fillStyle='#fbbf24';g.beginPath();g.arc(X,Y,4,0,7);g.fill();g.font='bold 12px monospace';g.fillText('λmax = 246 nm  (A = '+specA(246).toFixed(3)+')',X-150,Y-10);}
+  else{const X=x0+(cur-l0)/(l1-l0)*w;g.strokeStyle='#fb923c';g.setLineDash([3,3]);g.beginPath();g.moveTo(X,y0);g.lineTo(X,y0+h);g.stroke();g.setLineDash([]);}}
+ else if(scr.mode==='meas'){const k=scr.k,fullF=k>=6?fitPts(cal.std.slice(0,6)):null,rowA=i=>i<k?nv(measA(i),4):i===k?Aread.toFixed(4):'—',rowC=(i)=>fullF&&i<k?nv((measA(i)-fullF.b)/fullF.m,2):'—';
+  g.fillStyle='#2dd4bf';g.font='bold 11px monospace';g.fillText('Photometric · λ = '+wl.toFixed(1)+' nm',18,40);g.fillStyle='#fbbf24';g.font='bold 13px monospace';g.fillText('Abs '+Aread.toFixed(4),360,40);
+  g.fillStyle='#0f766e';g.fillRect(16,48,138,13);g.fillRect(160,48,172,13);g.fillStyle='#fff';g.font='bold 9px monospace';g.fillText('TABEL DERET STANDAR',20,58);g.fillText('TABEL SAMPEL',164,58);
+  g.fillStyle='#9bd7e3';g.font='9px monospace';g.fillText('No  C(mg/L)   Abs',20,74);g.fillText('Sampel      Abs     C(mg/L)',164,74);
+  for(let i=0;i<6;i++){const y=89+i*16;g.fillStyle=i<k?'#e6f6f4':i===k?'#fbbf24':'#3d5a66';g.fillText((i+1)+'   '+nv(cal.std[i]?cal.std[i][0]:NaN,1).padStart(5)+'     '+rowA(i),20,y);}
+  for(let j=0;j<6;j++){const i=6+j,y=89+j*16;g.fillStyle=i<k?'#e6f6f4':i===k?'#fbbf24':'#3d5a66';g.fillText((j<5?'Presisi '+(j+1):'Akurasi').padEnd(9)+' '+rowA(i).padEnd(7)+' '+rowC(i),164,y);}
+  const Ps=cal.std.slice(0,Math.min(6,k)).filter(q=>isFinite(q[0])&&isFinite(q[1])),fp=fitPts(Ps),gx=348,gy=70,gw=148,gh=118,xm=27.5,ym=.85,X=x=>gx+x/xm*gw,Y=y=>gy+gh-y/ym*gh;
+  g.strokeStyle='#1d4a58';g.strokeRect(gx,gy,gw,gh);g.fillStyle='#7f9aa8';g.font='8px monospace';g.textAlign='center';for(let x=0;x<=25;x+=5)g.fillText(String(x),X(x),gy+gh+10);g.fillText('Kurva kalibrasi (mg/L)',gx+gw/2,gy+gh+20);g.textAlign='left';
+  if(fp){g.strokeStyle='#2dd4bf';g.lineWidth=1.6;g.beginPath();g.moveTo(X(0),Y(fp.b));g.lineTo(X(xm),Y(fp.m*xm+fp.b));g.stroke();g.lineWidth=1;}
+  g.fillStyle='#fbbf24';Ps.forEach(q=>{g.beginPath();g.arc(X(q[0]),Y(q[1]),3,0,7);g.fill();});
+  g.fillStyle='#34d399';g.font='bold 9px monospace';if(fp){g.fillText('y = '+nv(fp.m,4)+'x '+(fp.b<0?'− ':'+ ')+nv(Math.abs(fp.b),4),gx,gy+gh+34);if(fp.n>=3)g.fillText('R² = '+nv(fp.r2,4)+'   (n = '+fp.n+')',gx,gy+gh+46);}else{g.fillStyle='#3d5a66';g.fillText('Regresi: menunggu ≥ 2 standar',gx,gy+gh+34);}
+  g.fillStyle='#9bd7e3';g.font='9px monospace';g.fillText('Progres pengukuran: '+Math.min(k,12)+' / 12',20,214);g.strokeStyle='#2dd4bf';g.strokeRect(20.5,220.5,300,8);g.fillStyle='#2dd4bf';g.fillRect(21,221,299*Math.min(1,k/12),7);
+  g.fillStyle='#7f9aa8';g.fillText('Mode: Photometric · Lampu D2 · Cuvet 10 mm · Blanko HCl 1:60',20,246);}
+ else if(scr.mode==='curve'&&f){const L=60,T0=44,w=250,h=200,xm=27.5,ym=Math.max(...f.P.map(q=>q[1]))*1.1,X=x=>L+x/xm*w,Y=y=>T0+h-y/ym*h,Pn=f.P.slice(0,scr.curveN),fp=fitPts(Pn);
+  g.fillStyle='#2dd4bf';g.font='bold 12px monospace';g.fillText('Kurva Kalibrasi Thiamin · 246 nm',L,T0-10);g.strokeStyle='#1d4a58';g.strokeRect(L,T0,w,h);g.fillStyle='#7f9aa8';g.font='9px monospace';g.textAlign='right';
+  for(let i=0;i<=4;i++){g.fillText((ym*i/4).toFixed(2),L-4,Y(ym*i/4)+3);}g.textAlign='center';for(let x=0;x<=25;x+=5)g.fillText(String(x),X(x),T0+h+12);g.fillText('Konsentrasi (mg/L)',L+w/2,T0+h+25);g.textAlign='left';
+  if(fp){g.strokeStyle='#2dd4bf';g.lineWidth=2;g.beginPath();g.moveTo(X(0),Y(fp.b));g.lineTo(X(xm),Y(fp.m*xm+fp.b));g.stroke();g.lineWidth=1;}
+  g.fillStyle='#fbbf24';Pn.forEach(q=>{g.beginPath();g.arc(X(q[0]),Y(q[1]),4,0,7);g.fill();});
+  g.fillStyle='#9bd7e3';g.font='10px monospace';g.fillText('Std (mg/L)   Abs',340,56);f.P.forEach((q,i)=>{g.fillStyle=i<scr.curveN?'#e6f6f4':'#3d5a66';g.fillText(nv(q[0],1).padStart(6)+'      '+nv(q[1],4),340,72+i*14);});
+  if(fp){g.fillStyle='#34d399';g.font='bold 11px monospace';g.fillText('y = '+nv(fp.m,4)+'x '+(fp.b<0?'− ':'+ ')+nv(Math.abs(fp.b),4),340,176);if(fp.n>=3)g.fillText('R² = '+nv(fp.r2,4),340,194);if(scr.curveN>=6){const k=calc();if(k)g.fillText('Thiamin ≈ '+nv(k.km,1)+' mg/tab',340,214);}}}
+
+ stex.needsUpdate=true;}
+function drawLCD(){const g=lx;g.fillStyle='#02060a';g.fillRect(0,0,512,256);
+ if(upsOn&&instOn){g.fillStyle='#0b2a2e';g.fillRect(8,8,496,240);g.fillStyle='#2dd4bf';g.font='bold 30px monospace';g.fillText('UV-1800',22,48);
+  g.font='bold 54px monospace';g.fillStyle='#e6f6f4';g.fillText('λ '+wl.toFixed(1)+' nm',22,120);g.fillStyle='#fbbf24';g.fillText('A '+Aread.toFixed(3),22,184);
+  g.font='22px monospace';g.fillStyle='#9bd7e3';g.fillText(lampLvl>.95?'Lamp D2: READY':'Lamp warm-up '+Math.round(lampLvl*100)+'%',22,226);}
+ lcdT.needsUpdate=true;}
+
+/* ===== Status daya ===== */
+let lampLvl=0;
+function refreshPower(){upsBtn.material.color.set(upsOn?0x1fe08a:0xff3b30);upsBtn.material.emissive.set(upsOn?0x0a8a4a:0x8a0b0b);upsLed.material.color.set(upsOn?0x34d399:0x3a1a1a);
+ pwrBtn.material.color.set(instOn?0x1fe08a:0xff3b30);pwrBtn.material.emissive.set(instOn?0x0a8a4a:0x8a0b0b);instLed.material.color.set(upsOn&&instOn?0x34d399:0x3a1a1a);
+ cpuLed.material.color.set(cpuOn?0x34d399:0x3a1a1a);monLed.material.color.set(!monOn?0x3a1a1a:(cpuOn?0x34d399:0xfbbf24));
+ const pb=$('bPow');if(pb)pb.textContent=(upsOn||instOn||cpuOn||monOn)?'⏻ Matikan Alat':'⏻ Nyalakan Alat';ledLamp.material.color.set(upsOn&&instOn?0x34d399:0x3a1a1a);drawPC();drawLCD();}
+function setUPS(v){upsOn=v;if(!v){instOn=false;cpuOn=false;monOn=false;pcBoot=0;if(sim)stop();}refreshPower();}
+function setInst(v){if(v&&!upsOn){caption('⚠ Tidak ada daya','UPS harus dinyalakan terlebih dahulu (IK A.1).');return;}instOn=v;if(!v&&sim)stop();refreshPower();}
+function toggleCPU(){if(!cpuOn){if(!upsOn){caption('⚠ Tidak ada daya','CPU tersambung ke UPS yang masih OFF; UPS harus dinyalakan lebih dahulu.');return;}cpuOn=true;pcBoot=3;}else{cpuOn=false;pcBoot=0;if(sim)stop();}refreshPower();}
+function toggleMon(){if(!monOn&&!upsOn){caption('⚠ Tidak ada daya','Monitor tersambung ke UPS yang masih OFF; UPS harus dinyalakan lebih dahulu.');return;}monOn=!monOn;refreshPower();}
+function pressBtn(m){m.position.z-=.012;setTimeout(()=>{m.position.z+=.012;},260);}
+function allPower(on){if(on){if(!upsOn){pressBtn(upsBtn);setUPS(true);}setTimeout(()=>{if(!instOn)setInst(true);},500);setTimeout(()=>{if(!cpuOn)toggleCPU();},900);setTimeout(()=>{if(!monOn)toggleMon();},1300);caption('Peralatan dinyalakan','UPS, instrumen, CPU, dan monitor dinyalakan secara berurutan (IK A.1–A.7), lalu warm-up lampu dan booting Windows ditunggu.');}
+ else{if(sim)stop();cpuOn=false;monOn=false;pcBoot=0;instOn=false;upsOn=false;refreshPower();caption('Alat dimatikan','Software ditutup, komputer dimatikan, lalu instrumen dan UPS dimatikan (IK C).');}}
+$('bPow').onclick=()=>allPower(!(upsOn||instOn||cpuOn||monOn));
+
+/* ===== Berkas cahaya ===== */
+const PS=[PL,PM1,PS1,PMc,PG,PMf,PS2,PBS,PM3,PCS,PDS],PR=[PL,PM1,PS1,PMc,PG,PMf,PS2,PBS,PCR,PDR];
+function seg(a,b,r){const len=a.distanceTo(b),mk=(rr,c)=>new THREE.Mesh(new THREE.CylinderGeometry(rr,rr,len,12),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0,depthWrite:false,depthTest:false}));
+ const m=mk(r*1.6,0x7c5cff),c=mk(r*.45,0xe9e0ff);m.renderOrder=10;c.renderOrder=11;m.add(c);m.userData.core=c;
+ m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());root.add(m);return m;}
+const BEAMS=[];const common=[PL,PM1,PS1,PMc,PG,PMf,PS2,PBS];
+for(let i=0;i<common.length-1;i++)BEAMS.push({m:seg(common[i],common[i+1],.022),post:0});
+BEAMS.push({m:seg(PBS,PM3,.022),post:0},{m:seg(PM3,PCS,.022),post:0},{m:seg(PCS,PDS,.022),post:1},{m:seg(PBS,PCR,.022),post:0},{m:seg(PCR,PDR,.022),post:2});
+const DOT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.4,'rgba(255,255,255,.6)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
+function mkPath(pts){const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+pts[i].distanceTo(pts[i-1]));return{pts,L,T:L[L.length-1]};}
+const PATHS=[mkPath(PS),mkPath(PR)],PH=[];
+PATHS.forEach((p,pi)=>{for(let i=0;i<14;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:DOT,color:0xb8a0ff,transparent:true,opacity:0,depthWrite:false,depthTest:false}));sp.scale.set(.17,.17,1);sp.renderOrder=12;root.add(sp);PH.push({sp,p,u:i/14});}});
+function phUpdate(dt,on,Tsamp){PH.forEach(o=>{o.u=(o.u+dt*.22)%1;const p=o.p,d=o.u*p.T;let k=1;while(k<p.L.length-1&&d>p.L[k])k++;o.sp.position.lerpVectors(p.pts[k-1],p.pts[k],(d-p.L[k-1])/(p.L[k]-p.L[k-1]));
+  const afterCuv=p===PATHS[0]?(k>=10):(k>=9);o.sp.material.opacity=on?(afterCuv&&p===PATHS[0]?Math.max(.15,Tsamp):1):0;});}
+
+/* ===== Kamera & kontrol ===== */
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.minDistance=.4;controls.maxDistance=34;controls.maxPolarAngle=Math.PI*.52;controls.enableZoom=false;
+let goal=null;controls.addEventListener('start',()=>{goal=null;stopTour();});
+{const zr=new THREE.Raycaster(),zm=new THREE.Vector2(),dom=renderer.domElement,P=new THREE.Vector3(),Nn=new THREE.Vector3(),pl=new THREE.Plane();
+ function zoomAt(cx,cy,f){const r=dom.getBoundingClientRect();zm.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);zr.setFromCamera(zm,camera);
+  const d0=camera.position.distanceTo(controls.target),nd=Math.min(controls.maxDistance,Math.max(controls.minDistance,d0*f));f=nd/d0;if(Math.abs(f-1)<1e-4)return;
+  let hp=null;for(const h of zr.intersectObjects(root.children,true)){const o=h.object,m=o.material;if(o.isMesh&&o.visible&&m&&(!m.transparent||m.opacity>.1)&&h.distance>.05){hp=h.point;break;}}
+  if(!hp){camera.getWorldDirection(Nn);pl.setFromNormalAndCoplanarPoint(Nn,controls.target);hp=zr.ray.intersectPlane(pl,P)||controls.target.clone();}
+  P.copy(hp);camera.position.sub(P).multiplyScalar(f).add(P);controls.target.sub(P).multiplyScalar(f).add(P);goal=null;controls.update();}
+ dom.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,Math.min(2,Math.max(.5,Math.exp(e.deltaY*(e.deltaMode===1?33:1)*.0015))));},{passive:false});
+ let pd=0;const td=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+ dom.addEventListener('touchstart',e=>{if(e.touches.length===2)pd=td(e.touches);},{passive:true});
+ dom.addEventListener('touchmove',e=>{if(e.touches.length===2&&pd){const d=td(e.touches);zoomAt((e.touches[0].clientX+e.touches[1].clientX)/2,(e.touches[0].clientY+e.touches[1].clientY)/2,pd/d);pd=d;}},{passive:true});
+ dom.addEventListener('touchend',()=>{pd=0;});}
+const HOME={p:[6.5,5.2,12.5],t:[.5,.8,.4]};
+const flyTo=(p,t)=>goal={p:new THREE.Vector3(...p),t:new THREE.Vector3(...t)};
+camera.position.set(...HOME.p);controls.target.set(...HOME.t);
+const CAM={ups:[[-3.2,2.2,3.8],[-4.6,.5,-.4]],front:[[.3,2.6,6.2],[.3,.9,.6]],pc:[[4.2,1.8,3.8],[5.0,1.15,.3]],flask:[[-3.6,3.0,8.0],[-3.6,.5,2.4]],cuv:[[3.6,4.2,3.6],[1.9,.9,-.5]],mono:[[-.1,3.8,3.6],[-.1,.8,-.4]],lamp:[[-2.4,2.8,3.4],[-1.9,.8,0]]};
+
+/* ===== Interaksi, mode, info ===== */
+const TOUR=[
+ {t:'Panorama laboratorium',d:'Ruang laboratorium instrumentasi dilihat secara menyeluruh: meja kerja berkeramik, instrumen, dan dinding informasi.',c:[HOME.p,HOME.t]},
+ {t:'Dinding informasi',d:'Papan tulis alur kerja, poster spektrum, poster Beer–Lambert, dan tabel periodik dipasang di dinding belakang.',c:[[-1,5.6,11],[-1,5.4,-3.6]]},
+ {t:'Rambu K3 & jam dinding',d:'Rambu keselamatan kerja dipasang setinggi pandangan analis, dan papan pengumuman dipakai untuk jadwal praktikum.',c:[[3,4.2,9],[3,4.6,-3.6]]},
+ {t:'Lemari asam & wastafel',d:'HCl pekat diencerkan di dalam lemari asam, sedangkan wastafel disediakan untuk mencuci alat gelas.',c:[[9,2.8,6],[8.4,1.6,-2.4]]},
+ {t:'Rak reagen & jendela',d:'Botol-botol reagen disimpan di rak dinding dan diberi label yang jelas.',c:[[-4,4.5,7],[-10,4.5,1]]},
+ {t:'Instrumen UV-Vis',d:'Spektrofotometer UV-Vis double-beam lengkap dengan panel kontrol, LCD, dan kompartemen cuvet.',c:CAM.front},
+ {t:'Sistem optik (tembus pandang)',d:'Cahaya dari lampu diteruskan lewat monokromator, dibagi oleh beam splitter, lalu ditangkap oleh detektor.',c:[[3.4,5.2,5.2],[.8,.8,-.2]],x:1},
+ {t:'Komputer & perangkat data',d:'Data absorbansi diolah oleh software UVProbe di komputer.',c:CAM.pc},
+ {t:'Perlengkapan preparasi',d:'Gelas piala HCl 1:60, deret standar, sampel Presisi 1–5, dan sampel Akurasi disusun di meja kerja.',c:CAM.flask}];
+function stopTour(){if(!tour)return;tour=null;$('bTour').classList.remove('on');$('bTour').textContent='🎥 Tur Lab';if(!sim&&!beamForce)setXray(false);}
+const stage=$('stage'),isMob=()=>matchMedia('(max-width:900px)').matches;
+let selected=null,hover=null,hl=new Set(),xray=false,labelsOn=false,beamForce=false,lidOpen=false;
+const MODES={
+ overview:{n:'1 · Overview',ids:[],cam:[HOME.p,HOME.t],d:'Seluruh instrumen UV-Vis double-beam beserta perlengkapan meja lab bisa dilihat dari sini. Tampilan dapat diputar, di-zoom, dan digeser, lalu komponen diklik untuk melihat penjelasannya.'},
+ light:{n:'2 · Sumber Cahaya',ids:['lampD2','lampW'],x:1,cam:CAM.lamp,d:'Lampu D₂ (UV) dan lampu tungsten-halogen (Vis) dipakai sebagai sumber sinar yang kontinu.'},
+ mono:{n:'3 · Monokromator',ids:['mono','slit','bs'],x:1,cam:CAM.mono,d:'Sinar diatur oleh celah, cermin kolimator, kisi difraksi, dan cermin fokus, lalu dibagi oleh beam splitter.'},
+ cuv:{n:'4 · Kompartemen Cuvet',ids:['cuvComp','cuvette'],x:1,cam:CAM.cuv,d:'Berkas sampel dan berkas referensi dilewatkan melalui dua cuvet kuarsa berukuran kecil.'},
+ det:{n:'5 · Detektor & Data',ids:['detector','display','pc'],x:1,cam:[[4.2,3.6,4.6],[2.6,.9,-.2]],d:'Cahaya diubah menjadi sinyal listrik oleh PMT/fotodioda, lalu absorbansi ditampilkan di PC.'},
+ prep:{n:'6 · Preparasi Larutan',ids:['flask','akur','std','hcl'],cam:CAM.flask,d:'HCl 1:60 (di gelas piala plastik bergagang), deret standar, sampel Presisi 1–5, dan sampel Akurasi disusun di meja kerja.'},
+ pcm:{n:'7 · PC & Software',ids:['pc','ups'],cam:CAM.pc,d:'UPS, CPU, dan monitor dengan software UVProbe terlihat di sini. Layar bisa diklik untuk membuka perhitungan.'}};
+function setXray(v){xray=v;shells.forEach(m=>{m.material.transparent=v;m.material.opacity=v?.12:1;m.material.depthWrite=!v;m.material.needsUpdate=true;});$('bX').classList.toggle('on',v);}
+let LOG=[],lastCT='',simT=0,SPD=1,tour=null;
+const fmtT=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');
+function caption(t,d){$('cap').innerHTML='<b>'+t+'</b>'+d;if(sim&&t!==lastCT){lastCT=t;LOG.push([simT,t,String(d).replace(/<[^>]+>/g,'')]);if($('logv').classList.contains('show'))renderLog();}}
+function setMode(k){const m=MODES[k];hl=new Set(m.ids);flyTo(...m.cam);if(!beamForce&&!sim)setXray(!!m.x);caption(m.n,m.d);document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('on',b.dataset.m===k));}
+function showInfo(id){selected=id;const d=D[id];if(isMob())stage.classList.remove('hr');else stage.classList.remove('hr');
+ $('info').innerHTML=`<h2>${d[0]}</h2><h4>Fungsi</h4><p>${d[1]}</p><h4>Prinsip kerja</h4><p>${d[2]}</p><h4>Hubungan dengan analisis</h4><p>${d[3]}</p><h4>Contoh masalah (troubleshooting)</h4><p>${d[4]}</p>`;}
+function welcome(){selected=null;$('info').innerHTML='<h2>Panel Informasi</h2><p>Komponen pada model 3D (atau pada daftar di kiri) bisa diklik untuk melihat fungsi, prinsip kerja, kaitannya dengan analisis Thiamin, dan contoh masalahnya.</p><h4>Kontrol</h4><p>Tampilan diputar dengan klik kiri + geser, di-zoom dengan scroll (atau cubit dua jari di layar sentuh), dan digeser dengan klik kanan + geser.</p><h4>Interaksi</h4><p>Tombol hijau UPS, tombol power instrumen, tombol CPU/monitor, tutup cuvet, layar PC, dan Buku IK juga bisa diklik.</p>';}
+Object.keys(MODES).forEach(k=>{const b=document.createElement('button');b.className='mode';b.dataset.m=k;b.textContent=MODES[k].n;b.onclick=()=>{setMode(k);if(isMob())stage.classList.add('hl');};$('modes').appendChild(b);});
+const labels={};
+Object.keys(D).forEach(id=>{const b=document.createElement('button');b.className='comp';b.textContent=SHORT(id);b.onclick=()=>{showInfo(id);const p=D[id][5];flyTo([p[0]+2.5,p[1]+1.5,p[2]+4],[p[0],p[1]-.3,p[2]]);if(isMob())stage.classList.add('hl');};$('list').appendChild(b);
+ const l=document.createElement('div');l.className='lbl';l.textContent=SHORT(id);l.style.display='none';l.onclick=()=>showInfo(id);$('labels').appendChild(l);labels[id]=l;});
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down=null,lastHit=null;
+function hit(e){const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mouse,camera);
+ const h=ray.intersectObjects(pick.filter(m=>m.visible&&m.parent.visible&&!(xray&&m.userData.shell)),false);lastHit=h.length?h[0].object:null;return h.length?h[0].object.userData.id:null;}
+renderer.domElement.addEventListener('pointermove',e=>{hover=hit(e);const t=$('tip');
+ if(hover){t.style.display='block';t.style.left=(e.offsetX+14)+'px';t.style.top=(e.offsetY+14)+'px';t.innerHTML='<b>'+D[hover][0]+'</b><br>'+D[hover][1];}else t.style.display='none';
+ renderer.domElement.style.cursor=hover?'pointer':'grab';});
+renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);
+renderer.domElement.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down[0],e.clientY-down[1])<5){const id=hit(e);if(id){showInfo(id);const u=lastHit.userData;
+ if(u.upsBtn)setUPS(!upsOn);else if(id==='power')setInst(!instOn);else if(u.lid)toggleLid();
+ else if(u.cpuBtn)toggleCPU();else if(u.monBtn)toggleMon();
+ else if(u.screen){if(pcReady())openCal();else caption('⚠ Komputer belum menyala','UPS, CPU, dan monitor harus dinyalakan terlebih dahulu.');}
+ else if(id==='ik')openIK();}}down=null;});
+function toggleLid(){if(sim&&sim.i>=0&&SEQ[sim.i]&&SEQ[sim.i].s>=4)return;lidOpen=!lidOpen;$('bLid').textContent=lidOpen?'Tutup Cuvet':'Buka Tutup Cuvet';if(lidOpen){flyTo(...CAM.cuv);caption('Tutup kompartemen dibuka','Cuvet sampel dan referensi dapat dilihat dari atas. Tutup harus ditutup rapat saat pengukuran.');}else caption('Tutup kompartemen ditutup','Cahaya luar dihalangi; pengukuran dapat dilakukan.');}
+$('bLid').onclick=toggleLid;
+
+/* ===== Simulasi ===== */
+const CHIPS=['1 Alat disiapkan','2 Pelarut & induk disiapkan','3 Deret standar dibuat','4 Sampel dipreparasi','5 λ maksimum ditentukan','6 Standar & sampel diukur','7 Kurva kalibrasi dibuat'];
+CHIPS.forEach((c,i)=>{if(i){const a=document.createElement('span');a.className='arr';a.textContent='→';$('pipe').appendChild(a);}const s=document.createElement('span');s.className='chip';s.textContent=c;$('pipe').appendChild(s);});
+function chips(upto){$('prog').style.width=(upto<0?0:Math.min(100,(upto+1)/7*100))+'%';document.querySelectorAll('.chip').forEach((c,i)=>{c.className='chip'+(upto<0?'':i<upto?' done':i===upto?' act':'');});}
+let sim=null,beamOn=false,Tsamp=1;
+const setHL=a=>{hl=new Set(a);};
+const setFill=(F,g,col)=>{F.goal=g;if(col!==undefined)F.colGoal=new THREE.Color(col);};
+const setCuv=(F,col)=>{F.goal=new THREE.Color(col);};
+function resetDisplay(){FL.forEach(F=>F.goal=.9);fPre.forEach(F=>setFill(F,.9,lcol(14).getHex()));setFill(fAkur,.9,lcol(17).getHex());setFill(fHcl,.85,0xeaf6ff);fStd.forEach((F,i)=>setFill(F,.9,lcol(i*5).getHex()));setCuv(cvS,lcol(14).getHex());setCuv(cvR,0xeaf6ff);}
+function emptyAll(){FL.forEach(F=>{F.goal=0;F.cur=0;F.liq.scale.y=.001;F.liq.visible=false;});}
+const sub=[
+ {s:0,d:2.4,f(){setHL(['ups']);setXray(false);flyTo(...CAM.ups);caption('1 · Persiapan — kondisi awal','Semua peralatan masih mati: UPS, spektrofotometer UV-Vis, CPU, dan monitor. Sebelum mulai bekerja, jas lab, kacamata, dan sarung tangan dikenakan terlebih dahulu.');}},
+ {s:0,d:2.6,f(){pressBtn(upsBtn);setUPS(true);caption('IK A.1 · UPS dinyalakan','Kabel UPS dihubungkan ke sumber listrik, lalu tombol ON ditekan. Instrumen, CPU, dan monitor ikut dialiri listrik lewat soket UPS.');}},
+ {s:0,d:3,f(){setHL(['power','display']);flyTo(...CAM.front);pressBtn(pwrBtn);setInst(true);caption('IK A.2 · Spektrofotometer UV-Vis dinyalakan','Tombol power ditekan. Setelah itu self-check dijalankan otomatis oleh instrumen dan lampu D₂/W mulai dipanaskan.');}},
+ {s:0,d:2.4,f(){setHL(['pc']);flyTo(...CAM.pc);pressBtn(cpuBtn);toggleCPU();caption('IK A.3 · CPU dinyalakan','Tombol power CPU ditekan, lalu proses booting Windows ditunggu.');}},
+ {s:0,d:2.2,f(){pressBtn(monBtn);toggleMon();caption('IK A.3 · Monitor dinyalakan','Tombol power monitor ditekan.');}},
+ {s:0,d:.4,w:()=>pcReady(),f(){caption('Booting Windows ditunggu','Desktop ditunggu sampai tampil sepenuhnya.');}},
+ {s:0,d:8,u(p){scr.mode='init';scr.warm=p;drawPC();},f(){setHL(['lampD2','lampW','pc']);flyTo(...CAM.pc);scr.mode='init';scr.warm=0;caption('IK A.4 · Software dibuka & di-warm-up','Software UVProbe dibuka dan instrumen dihubungkan (Connect). Proses warm-up ditunggu sampai status lampu siap; pada praktik sebenarnya pemanasan lampu D₂ berlangsung ±15–30 menit.');}},
+ {s:1,d:4,f(){setHL(['hcl','hood']);flyTo([1.0,1.8,5.2],[1.4,.5,2.5]);setFill(fHcl,.85,0xeaf6ff);caption('2 · Larutan pengencer HCl 1:60 dibuat','Satu bagian HCl pekat ditambahkan ke dalam 59 bagian air di lemari asam (asam selalu dimasukkan ke dalam air), lalu hasilnya ditampung di gelas piala plastik bergagang. Larutan ini dipakai untuk melarutkan, mengencerkan, dan sebagai blanko.');}},
+ {s:1,d:3.4,f(){setHL(['hcl']);flyTo([1.0,1.8,5.2],[1.4,.5,2.5]);caption('Larutan induk Thiamin 1000 mg/L','Larutan induk sudah disiapkan lebih dulu (±100,0 mg Thiamin HCl standar dilarutkan dengan HCl 1:60 dalam labu takar 100 mL), sehingga langsung bisa dipipet untuk membuat deret standar.');}},
+ {s:2,d:7,u(p){const n=Math.min(5,Math.floor(p*5.99));fStd.forEach((F,i)=>{if(i<=n&&F.goal===0)setFill(F,.9,lcol(i*5).getHex());});const v=[0,.5,1,1.5,2,2.5][n];caption('3 · Deret standar dibuat — Std '+n*5+' mg/L','Larutan induk 1000 mg/L dipipet sebanyak '+v.toFixed(1)+' mL ke dalam labu takar 100 mL, kemudian ditepatkan dengan HCl 1:60 sampai tanda tera. (C₁V₁ = C₂V₂ → '+(n*5)+' mg/L)');},f(){setHL(['std']);flyTo([-1.4,1.8,5.4],[-1.4,.5,2.5]);}},
+ {s:3,d:4.2,f(){setHL(['flask','akur']);flyTo(...CAM.flask);caption('4 · Serbuk sampel ditimbang','Dua puluh tablet Vitamin B1 digerus sampai halus, kemudian serbuk setara 1 tablet (±'+cal.mw.toFixed(4)+' g) ditimbang untuk setiap labu. Penimbangan dilakukan lima kali (Presisi 1–5) dan satu kali lagi untuk sampel Akurasi.');}},
+ {s:3,d:6,u(p){const n=Math.min(5,Math.floor(p*6.99));fPre.forEach((F,i)=>{if(i<=n&&F.goal===0)setFill(F,.9,0xf3eed2);});if(n>=5&&fAkur.goal===0)setFill(fAkur,.9,0xf3eed2);},f(){flyTo(...CAM.flask);caption('Sampel dilarutkan','HCl 1:60 ditambahkan ke setiap labu, lalu disonikasi sampai serbuk larut dan ditepatkan sampai tanda tera 200 mL. Larutan masih agak keruh karena eksipien tablet.');}},
+ {s:3,d:4.2,f(){fPre.forEach(F=>setFill(F,.9,lcol(14).getHex()));setFill(fAkur,.9,lcol(14).getHex());caption('Filtrat disaring dan diencerkan','Larutan disaring dengan kertas saring (filtrat awal dibuang) sampai diperoleh filtrat yang jernih berwarna kuning. Filtrat dipipet '+cal.Vp+' mL ke labu '+cal.Vd+' mL dan ditepatkan (faktor pengenceran = '+(cal.Vd/cal.Vp)+').');}},
+ {s:3,d:4,f(){setHL(['akur']);setFill(fAkur,.9,lcol(17).getHex());caption('Spike ditambahkan pada sampel Akurasi','Pada labu Akurasi, larutan standar Thiamin '+cal.cs+' mg/L dipipet sebanyak '+cal.vs+' mL sebagai spike, lalu ditepatkan lagi sampai tanda tera '+cal.vt+' mL.');}},
+ {s:4,d:3.4,f(){setHL(['cuvComp','cuvette']);setXray(false);flyTo(...CAM.cuv);lidOpen=true;$('bLid').textContent='Tutup Cuvet';setCuv(cvR,0xeaf6ff);setCuv(cvS,0xeaf6ff);caption('5 · Cuvet disiapkan untuk λ maksimum','Tutup kompartemen dibuka, lalu kedua cuvet kuarsa diisi dengan blanko HCl 1:60 untuk koreksi baseline.');}},
+ {s:4,d:3,f(){lidOpen=false;$('bLid').textContent='Buka Tutup Cuvet';setHL(['display','pc']);flyTo(...CAM.pc);wl=300;Aread=0;scr.mode='scan';scr.scanP=0;caption('Baseline dikoreksi (autozero)','Tutup kompartemen ditutup, lalu baseline 210–300 nm dikoreksi dengan blanko. Setelah itu, isi cuvet sampel diganti dengan standar Thiamin 15 mg/L.');}},
+ {s:4,d:14,u(p){scr.scanP=p;wl=300-p*90;Aread=specA(wl);if(p>.98){wl=246;Aread=specA(246);}drawPC();},f(){setHL(['mono','detector','pc','cuvComp']);setXray(true);beamOn=true;setCuv(cvS,lcol(15).getHex());flyTo([3.4,5.2,5.2],[.8,.8,-.2]);scr.mode='scan';scr.scanP=0;caption('Spektrum dipindai 300 → 210 nm','Kisi diputar perlahan sehingga panjang gelombang diturunkan sedikit demi sedikit, dan grafiknya digambar bertahap di layar. Puncak serapan Thiamin terlihat di ±246 nm (π→π*) dengan bahu lemah di ±270 nm (n→π*).');}},
+ {s:4,d:3.2,f(){wl=246;Aread=specA(246);scr.scanP=1;drawPC();flyTo(...CAM.pc);setHL(['pc']);caption('λ maksimum Thiamin = 246 nm','Puncak ditemukan pada rentang 235–250 nm, dan panjang gelombang inilah yang dipakai untuk semua pengukuran berikutnya.');}},
+ {s:5,d:3.2,f(){wl=246;Aread=0;scr.mode='meas';scr.k=0;setHL(['display','cuvette','detector']);setXray(true);beamOn=true;flyTo([3.4,5.2,5.2],[1.5,.8,-.3]);setCuv(cvR,0xeaf6ff);setCuv(cvS,lcol(0).getHex());caption('6 · Pengukuran pada λ = 246 nm','Blanko ditempatkan pada cuvet referensi, dan autozero dilakukan dengan blanko. Larutan pada cuvet sampel diganti satu per satu, dimulai dari konsentrasi terkecil.');}},
+ {s:5,d:24,u(p,P){const n=12,k=Math.min(n-1,Math.floor(p*n));if(P.k!==k){P.k=k;setCuv(cvS,lcol(k<6?cal.std[k][0]:k<11?14:17).getHex());scr.k=k;Aread=0;if(k===0||k===6)flyTo(...CAM.pc);}
+  const q=(p*n)%1,tgt=measA(k);Aread=tgt*Math.min(1,q*2.2)+(q>.5?(Math.random()-.5)*.001:0);if(q>.97&&k<n)scr.k=k+1;Tsamp=Math.pow(10,-Aread);
+  const nm=LISTM[k];caption('6 · Diukur: '+nm+(k<6?' mg/L':''),(k<6?'Larutan standar':k<11?'Larutan sampel Presisi':'Larutan sampel Akurasi (spike 2,5 mg/L)')+' dimasukkan ke cuvet sampel, dan absorbansi terbaca A = '+Aread.toFixed(4)+'. Cuvet dibilas dengan larutan berikutnya sebelum pengukuran dilanjutkan.');drawPC();},f(P){P.k=-1;flyTo(...CAM.pc);setHL(['pc']);}},
+ {s:6,d:9,u(p){scr.curveN=Math.min(6,Math.ceil(p*6.5));scr.line=p>.3;drawPC();},f(){beamOn=false;setXray(false);Aread=0;Tsamp=1;scr.mode='curve';scr.curveN=0;scr.line=false;setHL(['pc']);flyTo(...CAM.pc);caption('7 · Kurva kalibrasi dibuat','Titik standar diplot satu per satu terhadap konsentrasi, dan garis regresi linear y = bx + a diperbarui setiap kali titik baru ditambahkan. Nilai r² yang mendekati 1 menunjukkan bahwa kurva bersifat linear.');}},
+ {s:6,d:3.4,f(){const f=fit();caption('Hasil regresi diperoleh',f?'y = '+nv(f.m,4)+'x + '+nv(f.b,4)+'; R² = '+nv(f.r2,4)+'. Dari persamaan inilah konsentrasi sampel dihitung.':'');}}
+];
+const SEQ=sub;
+function stop(){sim=null;beamOn=false;beamForce=false;Tsamp=1;Aread=0;lidOpen=false;$('bLid').textContent='Buka Tutup Cuvet';hl=new Set();chips(-1);$('bSim').textContent='▶ Mulai Simulasi';$('bPath').classList.remove('on');
+ resetDisplay();scr.mode=pcReady()?'desk':'off';wl=246;drawPC();drawLCD();setXray(false);setMode('overview');}
+function startSim(){stop();LOG=[];lastCT='';simT=0;setUPS(false);cpuOn=monOn=false;pcBoot=0;refreshPower();emptyAll();setCuv(cvS,0xeaf6ff);setCuv(cvR,0xeaf6ff);scr.mode='off';
+ sim={i:-1,t:0};$('bSim').textContent='■ Hentikan Simulasi';}
+function finish(){sim=null;beamOn=false;chips(7);$('bSim').textContent='▶ Mulai Simulasi';openCal();}
+function updateSim(dt){if(!sim)return;simT+=dt;const S=SEQ[sim.i],dur=S?S.d:0;
+ if(sim.i<0||(sim.t>=dur&&(!S.w||S.w()))){sim.i++;sim.t=0;if(sim.i>=SEQ.length){finish();return;}const N=SEQ[sim.i];chips(N.s);N.P={};N.f(N.P);return;}
+ sim.t+=dt;if(S.u)S.u(Math.min(1,sim.t/dur),S.P);}
+$('bSim').onclick=()=>sim?stop():startSim();
+$('bPath').onclick=()=>{if(sim)return;beamForce=!beamForce;$('bPath').classList.toggle('on',beamForce);
+ if(beamForce){if(!(upsOn&&instOn)){beamForce=false;$('bPath').classList.remove('on');caption('⚠ Instrumen mati','UPS dan instrumen harus dinyalakan (tombol Nyalakan Alat) agar lampu menyala.');return;}
+  setXray(true);flyTo([3.4,5.6,5.6],[.3,.8,-.3]);setHL(['lampD2','mono','cuvComp','detector']);lidOpen=false;
+  caption('Jalur Berkas Sinar','Cahaya dari lampu D₂ dipantulkan oleh cermin, dilewatkan melalui celah masuk, kolimator, kisi, cermin fokus, dan celah keluar, lalu dibagi oleh beam splitter. Kedua berkas kemudian melewati cuvet referensi dan cuvet sampel sebelum ditangkap oleh detektor.');}
+ else{setXray(false);hl=new Set();caption('Jalur dimatikan','');}};
+$('bPrin').onclick=()=>{hl=new Set(['lampD2','mono','cuvette','detector']);flyTo(...CAM.cuv);selected=null;
+ $('info').innerHTML='<h2>Prinsip Kerja Spektrofotometri UV-Vis</h2><p>Sinar UV diserap oleh molekul Thiamin sehingga elektron dipindahkan dari orbital berenergi rendah ke orbital berenergi tinggi. Banyaknya sinar yang diserap berbanding lurus dengan konsentrasi.</p><h4>Hukum Beer–Lambert</h4><p><b>A = ε · b · c</b><br>A = −log T = log(I₀/I); ε = absorptivitas molar; b = tebal cuvet (1 cm); c = konsentrasi. Hubungan linear ini hanya berlaku pada konsentrasi rendah (A ≈ 0,1–1).</p><h4>Transisi elektronik</h4><svg viewBox="0 0 240 150" width="100%" style="max-width:260px"><g stroke="#6a736e" stroke-width="2" fill="none"><line x1="20" y1="20" x2="90" y2="20"/><line x1="20" y1="45" x2="90" y2="45"/><line x1="20" y1="95" x2="90" y2="95"/><line x1="20" y1="115" x2="90" y2="115"/><line x1="20" y1="135" x2="90" y2="135"/></g><g fill="#1f2926" font-size="11"><text x="95" y="24">σ*</text><text x="95" y="49">π*</text><text x="95" y="99">n</text><text x="95" y="119">π</text><text x="95" y="139">σ</text></g><g stroke-width="2.5" fill="none"><path d="M140 115 L140 48" stroke="#0f766e"/><path d="M165 95 L165 48" stroke="#b45309"/></g><g fill="#0f766e" font-size="11"><text x="125" y="75">π→π*</text></g><g fill="#b45309" font-size="11"><text x="168" y="75">n→π*</text></g></svg><p>Transisi π→π* (λmax ≈ 246 nm) menghasilkan serapan yang kuat dengan ε besar, sedangkan transisi n→π* (bahu ≈ 270 nm) menghasilkan serapan yang lemah.</p><h4>Gugus kromofor Thiamin</h4><p>Sinar UV diserap oleh cincin pirimidin (4-amino-2-metilpirimidin) dan cincin tiazol yang dihubungkan oleh jembatan metilen. Ikatan rangkap terkonjugasi serta pasangan elektron bebas N/S pada kedua cincin itulah yang bertanggung jawab atas serapan tersebut.</p><h4>Mengapa double-beam?</h4><p>Berkas dibagi menjadi berkas sampel dan berkas referensi, sehingga drift lampu dikoreksi secara otomatis.</p>';
+ stage.classList.remove('hr');caption('Prinsip Kerja','Serapan sinar UV oleh cincin pirimidin dan tiazol dijelaskan melalui A = ε·b·c serta transisi π→π* dan n→π*.');};
+$('bTour').onclick=()=>{if(tour){stopTour();return;}if(sim)stop();tour={i:-1,t:0};$('bTour').classList.add('on');$('bTour').textContent='■ Hentikan Tur';};
+$('bSpd').onclick=()=>{SPD=SPD===1?2:SPD===2?4:1;$('bSpd').textContent='⏩ Kecepatan '+SPD+'×';};
+function renderLog(){const v=$('logv');v.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;color:var(--acc);font-size:16px">Log Book Simulasi</h2><span><button id="lgC">Kosongkan</button> <button id="lgX">✕ Tutup</button></span></div><p class="fm">Setiap kegiatan yang berlangsung selama simulasi dicatat secara otomatis.</p>'+(LOG.length?tbl(['Waktu','Kegiatan','Keterangan'],LOG.map(l=>[fmtT(l[0]),'<b>'+esc(l[1])+'</b>',esc(l[2])])):'<p>Belum ada catatan. Simulasi perlu dimulai terlebih dahulu.</p>');}
+$('bLog').onclick=()=>{$('cal').classList.remove('show');$('ikv').classList.remove('show');renderLog();$('logv').classList.add('show');};
+$('logv').addEventListener('click',e=>{if(e.target.id==='lgX')$('logv').classList.remove('show');else if(e.target.id==='lgC'){LOG=[];renderLog();}});
+$('bLbl').onclick=()=>{labelsOn=!labelsOn;$('bLbl').classList.toggle('on',labelsOn);};
+$('bX').onclick=()=>setXray(!xray);$('bCam').onclick=()=>flyTo(HOME.p,HOME.t);
+
+/* ===== Perhitungan ===== */
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tbl=(hd,rw)=>'<div style="overflow-x:auto"><table class="rt"><tr>'+hd.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+rw.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</table></div>';
+function drawCurve(){const cv=$('cv');if(!cv)return;const g=cv.getContext('2d'),W=480,Hh=300,L=50,R=14,T0=14,Bm=38;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,Hh);
+ const f=fit(),P=cal.std.filter(q=>isFinite(q[0])&&isFinite(q[1]));const xm=Math.max(1e-9,...P.map(q=>q[0]))*1.1,ym=Math.max(1e-9,...P.map(q=>q[1]))*1.1;
+ const X=x=>L+x/xm*(W-L-R),Y=y=>Hh-Bm-y/ym*(Hh-Bm-T0);g.strokeStyle='#1d4a58';g.fillStyle='#7f9aa8';g.font='11px system-ui';
+ for(let i=0;i<=5;i++){const x=xm*i/5,y=ym*i/5;g.beginPath();g.moveTo(X(x),T0);g.lineTo(X(x),Hh-Bm);g.moveTo(L,Y(y));g.lineTo(W-R,Y(y));g.stroke();g.fillText(x.toFixed(1),X(x)-8,Hh-Bm+14);g.fillText(y.toFixed(2),8,Y(y)+4);}
+ g.fillStyle='#d6e6ee';g.fillText('Konsentrasi (mg/L)',W/2-45,Hh-6);g.save();g.translate(12,Hh/2+25);g.rotate(-Math.PI/2);g.fillText('Absorbansi',0,0);g.restore();
+ if(f&&f.m){g.strokeStyle='#2dd4bf';g.lineWidth=2;g.beginPath();g.moveTo(X(0),Y(f.b));g.lineTo(X(xm),Y(f.m*xm+f.b));g.stroke();}
+ g.fillStyle='#fbbf24';P.forEach(q=>{g.beginPath();g.arc(X(q[0]),Y(q[1]),4,0,7);g.fill();});}
+function upd(){drawCurve();const k=calc();let h='<p>Minimal 2 standar dan 1 absorbansi sampel yang valid harus diisi.</p>';
+ if(k){const F=k.f;
+  h='<h4>1 · Deret standar & regresi linear</h4>'+tbl(['Konsentrasi (mg/L) · x','Absorbansi · y'],F.P.map(q=>[nv(q[0],2),nv(q[1],4)]).concat([['<b>Slope (b)</b>','<b>'+nv(F.m,5)+'</b>'],['<b>Intercept (a)</b>','<b>'+nv(F.b,5)+'</b>'],['<b>r</b>','<b>'+nv(F.r,4)+'</b>'],['<b>R²</b>','<b>'+nv(F.r2,4)+'</b>']]))
+  +'<p class="fm">Persamaan regresi: Y = bx + a → <b>y = '+nv(F.m,4)+'x '+(F.b<0?'− ':'+ ')+nv(Math.abs(F.b),4)+'</b> · R² '+(F.r2>=.995?'<span class="ok">memenuhi (≥ 0,995)</span>':'<span class="bad">kurang linear</span>')+'</p>';
+  h+='<h4>2 · Kadar Thiamin dalam sampel tablet (Presisi 1–'+k.rows.length+')</h4><p class="fm">C = (A − a)/b &nbsp;·&nbsp; C labu 200 mL = C × FP (FP = V labu ukur / V pipet = '+nv(k.FP,1)+') &nbsp;·&nbsp; mg dalam serbuk = C × FP × V labu (L) &nbsp;·&nbsp; mg/tablet = mg serbuk × (massa rata-rata tablet / massa serbuk yang ditimbang) &nbsp;·&nbsp; mg/kg = mg serbuk / massa serbuk (kg)</p>'
+   +tbl(['Sampel','Absorbansi','C terukur (mg/L)','C × FP (mg/L)','Kadar (mg/tablet)','Kadar (mg/kg)','% label'],k.rows.map((q,i)=>['Presisi '+(i+1),nv(q.a,4),nv(q.c,3),nv(q.cf,2),nv(q.mgT,2),Math.round(q.mgkg).toLocaleString('id-ID'),nv(q.pct,1)]))
+   +tbl(['Rata-rata (mg/tablet)','Rata-rata (mg/kg)','% terhadap label '+cal.label+' mg'],[['<b>'+nv(k.km,2)+'</b>','<b>'+Math.round(k.kgm).toLocaleString('id-ID')+'</b>','<b>'+nv(k.pct,1)+'</b>']]);
+  h+='<h4>3 · Kontrol presisi (%RSD)</h4><p class="fm">%RSD = SD (n−1) / rata-rata × 100</p>'+tbl(['n','Rata-rata (mg/tablet)','SD','%RSD','Syarat (≤ 2 %)'],[[k.rows.length,nv(k.km,2),nv(k.sd,3),'<b>'+nv(k.rsd,2)+'</b>',k.rsd<=2?'<span class="ok">✔ memenuhi</span>':'<span class="bad">✘ tidak memenuhi</span>']]);
+  h+='<h4>4 · Kontrol akurasi (%Recovery sampel Akurasi)</h4><p class="fm">C₂ = C standar × V spike / V labu · %Recovery = (C₃ − C₁) / C₂ × 100 · syarat 85–115 %</p>'
+   +tbl(['C₁ sampel (mg/L)','Abs sampel Akurasi','C₃ (mg/L)','C₂ spike (mg/L)','%Recovery','Syarat 85–115 %'],[[nv(k.C1,3),nv(cal.sp,4),nv(k.cSp,3),nv(k.C2,3),'<b>'+nv(k.rec,2)+'</b>',k.rec>=85&&k.rec<=115?'<span class="ok">✔ memenuhi</span>':'<span class="bad">✘ tidak memenuhi</span>']]);}
+ $('cr').innerHTML=h;}
+function renderCal(){const num=(k,l)=>'<label>'+l+'<input type="number" step="any" data-k="'+k+'" value="'+cal[k]+'"></label>';
+ $('cal').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;color:var(--acc);font-size:16px">Perhitungan & Tabel Data — Thiamin</h2><button id="cX">✕ Tutup</button></div>'
+ +'<div class="cg"><div><h4>Deret standar (mg/L · absorbansi)</h4><table id="ct">'+cal.std.map((q,i)=>'<tr><td>'+(i+1)+'</td>'+[0,1].map(j=>'<td><input type="number" step="any" data-i="'+i+'" data-j="'+j+'" value="'+(isNaN(q[j])?'':q[j])+'"></td>').join('')+'<td><button data-d="'+i+'">×</button></td></tr>').join('')+'</table><p><button id="cAdd">+ Standar</button> <button id="cRst">Reset</button></p>'
+ +'<h4>Sampel Presisi (absorbansi)</h4>'+cal.smp.map((v,i)=>'<label>Presisi '+(i+1)+'<span><input type="number" step="any" data-ri="'+i+'" value="'+(isNaN(v)?'':v)+'"> <button data-rd="'+i+'">×</button></span></label>').join('')+'<p><button id="cRa">+ Presisi</button></p>'
+ +'<h4>Preparasi sampel</h4>'+num('mtab','Massa rata-rata 1 tablet (g)')+num('mw','Massa serbuk ditimbang (g)')+num('Vf','Volume labu sampel (mL)')+num('Vp','Volume pipet filtrat (mL)')+num('Vd','Volume labu pengenceran (mL)')+num('label','Label klaim (mg/tablet)')
+ +'<h4>Sampel Akurasi (spike)</h4>'+num('sp','Absorbansi sampel Akurasi')+num('cs','Konsentrasi standar spike (mg/L)')+num('vs','Volume spike (mL)')+num('vt','Volume labu spike (mL)')
+ +'<p><button id="cRun">▶ Data ini disimulasikan</button></p></div><div><canvas id="cv" width="960" height="600" style="width:100%;max-width:560px;background:#13211e;border-radius:10px"></canvas><div id="cr"></div></div></div>';upd();}
+function openCal(){$('logv').classList.remove('show');$('ikv').classList.remove('show');$('cal').classList.add('show');renderCal();}
+$('cal').addEventListener('input',e=>{const t=e.target,d=t.dataset;if(d.i!==undefined)cal.std[+d.i][+d.j]=parseFloat(t.value);else if(d.ri!==undefined)cal.smp[+d.ri]=parseFloat(t.value);else if(d.k)cal[d.k]=parseFloat(t.value);upd();});
+$('cal').addEventListener('click',e=>{const t=e.target,d=t.dataset;if(t.id==='cX')$('cal').classList.remove('show');else if(t.id==='cAdd'){cal.std.push([NaN,NaN]);renderCal();}else if(t.id==='cRst'){cal=DEF();renderCal();}
+ else if(t.id==='cRa'){cal.smp.push(NaN);renderCal();}else if(t.id==='cRun'){$('cal').classList.remove('show');startSim();}
+ else if(d.rd!==undefined){if(cal.smp.length>1){cal.smp.splice(+d.rd,1);renderCal();}}else if(d.d!==undefined){cal.std.splice(+d.d,1);renderCal();}});
+$('bCal').onclick=openCal;
+
+/* ===== Buku IK ===== */
+const IKA=['Kabel UPS dihubungkan ke sumber listrik, lalu tombol ON pada UPS ditekan.','Spektrofotometer UV-Vis dinyalakan dengan tombol power, kemudian self-check ditunggu sampai selesai.','CPU dan monitor dinyalakan, lalu tampilan Windows ditunggu.','Software UVProbe dibuka dan tombol Connect diklik, kemudian lampu D₂/W dipanaskan (warm-up) selama ±15–30 menit sampai statusnya siap.','Cuvet kuarsa yang bersih, blanko HCl 1:60, deret standar, sampel Presisi 1–5, dan sampel Akurasi disiapkan.'];
+const IKB=['Mode <b>Spectrum</b> dipilih, lalu rentang 300–210 nm, slit 1 nm, dan scan speed medium diatur.','Kedua cuvet diisi dengan blanko HCl 1:60 dan tutup kompartemen ditutup, kemudian <b>Baseline Correction</b> dilakukan.','Isi cuvet sampel diganti dengan standar 15 mg/L, tombol Start diklik, dan λ maksimum Thiamin (±246 nm) ditentukan dari spektrum yang terbentuk.','Mode <b>Photometric</b> dipilih, λ = 246 nm dimasukkan, dan <b>Auto Zero</b> dilakukan dengan blanko.','Larutan standar diukur mulai dari konsentrasi terkecil (0–25 mg/L); cuvet dibilas dengan larutan berikutnya sebelum diisi.','Sampel Presisi 1–5 diukur, kemudian sampel Akurasi (yang sudah ditambah spike) diukur.','Kurva kalibrasi (regresi linear) disusun, r² ≥ 0,995 diperiksa, dan konsentrasi sampel dihitung.','Data disimpan lewat File → Save As, dan laporan dicetak bila diperlukan.'];
+const IKC=['Semua kejadian dicatat pada Log Book alat dan ditandatangani.','Software ditutup (Disconnect), komputer dimatikan, lalu monitor dimatikan.','Spektrofotometer UV-Vis dimatikan dengan tombol power.','UPS dimatikan, kemudian kabel dilepas dari sumber listrik bila perlu.','Cuvet bekas dibilas dengan air/etanol dan disimpan di tempatnya, lalu area kerja dirapikan.'];
+const IKD=['Jas lab, kacamata, dan sarung tangan wajib dikenakan.','Cuvet dipegang pada sisi buramnya; sisi optik tidak boleh disentuh.','Paparan UV langsung harus dihindari, dan kompartemen ditutup selama pengukuran.','Pada pembuatan HCl 1:60, asam harus selalu ditambahkan ke dalam air, dan limbah asam dibuang sesuai prosedur.'];
+const ikLi=a=>'<ol>'+a.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
+function openIK(){$('logv').classList.remove('show');$('cal').classList.remove('show');const v=$('ikv');
+ v.innerHTML='<div class="bar"><h2>Buku Instruksi Kerja — Spektrofotometer UV-Vis</h2><button id="ikX">✕ Tutup</button></div><div class="paper"><table><tr><td colspan="2" style="text-align:center;font-weight:700">INSTRUKSI KERJA<br>PENGGUNAAN SPEKTROFOTOMETER UV-Vis DOUBLE-BEAM (Shimadzu UV-1800 / UV-2600)<br>PENETAPAN KADAR THIAMIN PADA TABLET VITAMIN B1</td></tr><tr><td>Politeknik AKA Bogor · D3 Analisis Kimia</td><td>Disusun: Atha Mahardika Nawan (media pembelajaran edukasi)</td></tr></table>'
+ +'<h3>A. Persiapan</h3>'+ikLi(IKA)+'<h3>B. Pengoperasian</h3>'+ikLi(IKB)+'<h3>C. Mematikan Alat</h3>'+ikLi(IKC)+'<h3>D. Keselamatan Kerja (K3)</h3>'+ikLi(IKD)+'<p style="margin-top:14px;font-size:12px;color:#555">Dokumen ini adalah panduan edukasi dan bukan dokumen resmi laboratorium; kesesuaiannya dengan IK laboratorium perlu diperiksa.</p></div>';
+ v.classList.add('show');v.scrollTop=0;}
+$('ikv').addEventListener('click',e=>{if(e.target.id==='ikX')$('ikv').classList.remove('show');});$('bIK').onclick=openIK;
+
+/* ===== Loop ===== */
+const clock=new THREE.Clock(),v3=new THREE.Vector3();let lcdT0=0;
+function resize(){const w=view.clientWidth,h=view.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(view);resize();
+function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ if(pcBoot>0){pcBoot-=dt;if(pcBoot<=0){pcBoot=0;refreshPower();}else drawPC();}
+ updateSim(dt*SPD);
+ if(tour){tour.t+=dt;if(tour.i<0||tour.t>=6.5){tour.i++;tour.t=0;if(tour.i>=TOUR.length){stopTour();flyTo(HOME.p,HOME.t);}else{const s=TOUR[tour.i];flyTo(...s.c);if(!sim&&!beamForce)setXray(!!s.x);caption(s.t,s.d);}}}
+ if(goal){camera.position.lerp(goal.p,.06);controls.target.lerp(goal.t,.06);if(camera.position.distanceTo(goal.p)<.03)goal=null;}controls.update();
+ lid.rotation.x+=((lidOpen?-1.7:0)-lid.rotation.x)*.1;
+ FL.forEach(F=>{F.cur+=(F.goal-F.cur)*Math.min(1,dt*1.5);F.liq.scale.y=Math.max(.001,F.cur);F.liq.visible=F.cur>.02;F.mat.color.lerp(F.colGoal,.06);});
+ CV.forEach(F=>F.mat.color.lerp(F.goal,.08));
+ FANS.forEach(f=>f.rotation.z+=cpuOn?dt*10:0);
+ const lampTarget=(upsOn&&instOn)?1:0;lampLvl+=(lampTarget-lampLvl)*Math.min(1,dt*(lampTarget?.3:1.5));
+ const flick=.85+.15*Math.sin(t*12),d2=lampLvl*flick,wl2=lampLvl*.6;
+ d2Glow.material.opacity=d2*.8;wGlow.material.opacity=wl2*.8;lampLight.intensity=lampLvl*1.2;
+ const bOn=lampLvl>.2&&(beamOn||beamForce);Tsamp=sim?Tsamp:(beamForce?Math.pow(10,-.25):1);
+ BEAMS.forEach(b=>{const o=.85*(b.post===1?Math.max(.12,Tsamp):1)*lampLvl,vb=(bOn&&xray)?1:0;b.m.material.opacity=o*vb;b.m.userData.core.material.opacity=Math.min(1,o*vb*1.1);});
+ phUpdate(dt,bOn&&xray,Tsamp);
+ if(t-lcdT0>.15){lcdT0=t;drawLCD();if(sim&&(scr.mode==='meas'||scr.mode==='scan'))drawPC();}
+ const k=.3+.22*Math.sin(t*4);pick.forEach(m=>{const mm=m.material;if(!mm.emissive)return;const id=m.userData.id;
+  if(m.userData.upsBtn||m.userData.cpuBtn||m.userData.monBtn||m===pwrBtn){return;}
+  mm.emissive.setHex(0x14b8a6);mm.emissiveIntensity=id===selected?k+.25:hl.has(id)?k:id===hover?.18:0;});
+ {const nd=new Date();clockS.rotation.z=-nd.getSeconds()/60*Math.PI*2;clockM.rotation.z=-(nd.getMinutes()+nd.getSeconds()/60)/60*Math.PI*2;clockH.rotation.z=-((nd.getHours()%12)+nd.getMinutes()/60)/12*Math.PI*2;}
+ ledRdy.material.color.set(upsOn&&instOn?(lampLvl>.95?0x34d399:0xfbbf24):0x3a1a1a);
+ const W=view.clientWidth,Hh=view.clientHeight;
+ for(const id in labels){const l=labels[id];if(!labelsOn){l.style.display='none';continue;}v3.set(...D[id][5]).project(camera);if(v3.z>1){l.style.display='none';continue;}l.style.display='block';l.style.left=(v3.x*.5+.5)*W+'px';l.style.top=(-v3.y*.5+.5)*Hh+'px';}
+ renderer.render(scene,camera);}
+
+/* ===== UI umum ===== */
+$('mBtn').onclick=()=>stage.classList.toggle('hl');
+$('iBtn').onclick=()=>stage.classList.toggle('hr');
+const appEl=$('app');
+function setFull(v){appEl.classList.toggle('full',v);$('bFull').textContent=v?'⛶ Keluar Layar Penuh':'⛶ Layar Penuh';
+ try{if(v&&!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});else if(!v&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
+ setTimeout(resize,350);}
+$('bFull').onclick=$('fsBtn').onclick=()=>setFull(!appEl.classList.contains('full'));$('fsX').onclick=()=>setFull(false);
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&appEl.classList.contains('full'))setFull(false);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appEl.classList.contains('full'))setFull(false);});
+['btns'].forEach(id=>{const el=$(id);el.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){el.scrollLeft+=e.deltaY;e.preventDefault();}},{passive:false});});
+if(isMob())stage.classList.add('hl');else stage.classList.remove('hr');
+root.traverse(o=>{const m=o.isMesh&&o.material;if(m&&m.isMeshStandardMaterial)m.envMapIntensity=.65;});
+resetDisplay();FL.forEach(F=>{F.cur=F.goal;F.liq.scale.y=Math.max(.001,F.cur);F.liq.visible=F.cur>.02;F.mat.color.copy(F.colGoal);});CV.forEach(F=>F.mat.color.copy(F.goal));
+refreshPower();welcome();setMode('overview');loop();
+})();
+</script>
+</body></html>
